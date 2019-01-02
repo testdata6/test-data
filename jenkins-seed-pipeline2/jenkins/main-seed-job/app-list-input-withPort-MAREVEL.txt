@@ -1,0 +1,16 @@
+# sonardisable Inputs in 7 columns only.
+# First column for Service name
+# Secound column for Port number (add 10 for next service)
+# Third column for number for replica/pods in UAT
+# Fourth column for 'Github repo name.
+# Fifth column for Sonar Project name "plp-" prefix.
+# Sixth column for cb cluster name
+# Seventh column for Sonar flag sonarEnable/sonardisable for non UI service and
+# for UI service use flag uiservice
+# More column can be add, then need to modify generate-DSL-scripts accordingly.
+# Keep one or more space between columns
+
+#<ServiveName> <Port Number> <replica Count> <Repo Name> <Sonar Project Name > <cbCluster> <Service type> <CPU Limit >:<CPU Request> <Memory Limit>:<Memory Request>
+
+clp 9030 2 plp-learning-test learning-test cluster2 sonarenable 2:1 1G:512Mi
+pde 9510 2 plp-data-delivery course-data-delivery cluster1 sonarenable 2:1 1G:512Mi

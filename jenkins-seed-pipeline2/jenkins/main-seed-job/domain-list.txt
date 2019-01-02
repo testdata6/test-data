@@ -1,0 +1,7 @@
+#Enter Domain Team list in next line.
+#DO NOT USE '-' (hyphen), as DSL doesnot support it, you may use only '_' (underscore).
+#
+#NFR  # Removed NFR env from seed jobs as they need own custom jobs.
+Delivery_team
+Engagement_team
+Publishing_team
