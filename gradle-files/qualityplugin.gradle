@@ -1,0 +1,55 @@
+/**
+ *  This Plugin checks transitive dependency in gradle project and prints it on console.
+ */
+
+class CheckQualityPlugin implements Plugin<Project> {
+
+    void addToMap(dep, dependencyMap,dupSet) {
+
+        if(dependencyMap.containsKey(dep.name)){
+            dupSet.add(dep.name)
+        }else{
+            dependencyMap[dep.name] = dep.name
+        }
+    }
+
+    void apply(Project project) {
+
+        project.task('checkQuality') {
+
+            /* Contains list of unique dependencies */
+            def dependencyMap = [:]
+
+            /* Contain list of duplicate dependencies */
+            Set dupSet = new HashSet();
+
+            doFirst {
+
+                project.configurations.runtime.each {
+                    dep -> addToMap(dep, dependencyMap,dupSet);
+                }
+
+                /* Check for transitive dependency in collection */
+                if (dupSet.size() > 0) {
+
+                    println("Found Conflicting Transistive Dependencies \n")
+
+                    dupSet.each { println("${it}") }
+                } else {
+                    println("No Transitive Dependencies Found In Project")
+                }
+
+
+            }
+
+        }
+    }
+
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: CheckQualityPlugin
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}

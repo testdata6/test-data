@@ -1,0 +1,184 @@
+/*
+build.gradle:
+Please note that this file should not be changed except for local build and deployments.
+PLPdependencies.gradle and build.gradle will be overwritten from plp-core repo. However, they can be modified
+for local testing purposes.
+*/
+
+buildscript {
+  	ext {
+        springBootVersion = '2.0.4.RELEASE'
+    }
+    repositories {
+		 mavenLocal()
+         mavenCentral()
+         maven { url 'https://repo.spring.io/libs-snapshot' }
+		 maven { url "https://plugins.gradle.org/m2/" }
+	     maven { 
+	     	url "https://my-nexus.com/nexus-deps/content/repositories/plp-releases"
+	     	credentials {
+	            username "$mavenUser"
+	            password "$mavenPassword"
+	        }
+	     }
+	     maven { 
+	     	url "https://my-nexus.com/nexus-deps/content/repositories/snapshots"
+	     	credentials {
+	            username "$mavenUser"
+	            password "$mavenPassword"
+	        }
+	     }
+
+     }
+    // These are gradle build dependencies and not application requirements
+    dependencies {
+	    classpath 'de.undercouch.download:de.undercouch.download.gradle.plugin:3.4.3'
+	    classpath "net.linguica.gradle:maven-settings-plugin:0.5"
+	    classpath "com.diffplug.spotless:spotless-plugin-gradle:3.14.0"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+		classpath "org.springframework.cloud:spring-cloud-contract-gradle-plugin:2.0.0.RELEASE"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'de.undercouch.download'
+apply plugin: 'net.linguica.maven-settings'
+apply plugin: 'project-report'
+apply plugin: 'com.diffplug.gradle.spotless'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'spring-cloud-contract'
+apply plugin: 'maven-publish'
+
+spotless {
+ java {
+    eclipse().configFile 'format.xml'
+    licenseHeaderFile 'license.txt'
+   target project.fileTree(project.rootDir) {
+    include '**/*.java'
+	exclude '**/build/**'
+	}
+    enforceCheck true
+  }
+}
+apply plugin: 'eclipse'
+eclipse {
+    classpath {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+apply plugin: 'idea'
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+// Jacoco Implementation
+apply plugin: 'jacoco'
+jacoco {
+    toolVersion = "0.8.1"
+}
+test {
+    jacoco {
+        append = false
+        destinationFile = file("$buildDir/reports/jacoco/jacocoTest.exec")
+        classDumpDir = file("$buildDir/reports/jacoco/classpathdumps")
+    }
+}
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html {
+            enabled true
+            destination file("$buildDir/reports/jacoco")
+        }
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+        enabled = true
+            limit {
+            counter = 'BRANCH'
+                minimum = 0.80
+            }
+        }
+
+        rule {
+            enabled = true
+              limit {
+                counter = 'LINE'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+// PLP dependencies will always be downloaded from plp-core repo
+// plp-core will contain all the dependencies approved and signed off for
+// PLP project
+task getPLPDependencies {
+    download {
+        src 'https://github.com/projects/PLPV2/repos/plp-core/raw/build-files/plpdependencies.gradle?at=refs%2Fheads%2Fmaster'
+        dest new File(rootDir, 'plpdependencies.gradle')
+        username mavenUser
+        password mavenPassword
+    }
+}
+
+build.dependsOn getPLPDependencies
+jacocoTestCoverageVerification.dependsOn jacocoTestReport
+check.dependsOn jacocoTestCoverageVerification
+
+apply from: 'qualityplugin.gradle'
+apply from: 'plpdependencies.gradle'
+apply from: 'version.gradle'
+
+def allDeps = [];
+def projectDeps = [];
+ext.validate = project.hasProperty('validate') ? project.getProperty('validate') : false
+
+
+// Task to list all the dependencies in plpDependencies.gradle
+// and store it in allDeps list
+task listAllDeps {
+    def depValue;
+    if(validate){
+        rootProject.ext.commonDependencies.each{
+            dep -> if(dep.value.indexOf("stubs") != -1){
+                   depValue = dep.value.substring(0,dep.value.indexOf("stubs")-1) 
+            }
+            else{
+                depValue=dep.value;
+            }
+            allDeps.add(depValue); 
+                
+        }
+    }
+}
+listAllDeps.dependsOn getPLPDependencies
+
+// Task to validate the dependencies used in the project (version.gradle)
+// against list of valid dependencies in plpDependencies.gradle
+task validateDeps {
+    if(validate){
+        configurations.each{
+            config -> config.dependencies.each{
+                dep -> projectDeps.add(dep.getGroup()+":"+dep.getName()+":"+dep.getVersion());
+            }
+        }
+
+        projectDeps.each{
+            pd -> if(!allDeps.contains(pd)){
+                    throw new StopExecutionException("Outside Dependency Used \" " + pd  +" \"")
+            }
+        }
+    }
+}
+

@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: glt-learning-asset-evaluation-kernel
+
+  cloud:
+    consul:
+      enabled: true
+      discovery:
+        enabled: false
+      config:
+        failFast: true
+        enabled: true
+        format: FILES
+    bus:
+      enabled: false
+    stream:
+      dynamicDestinations:
+      kafka:
+        binder:
+          autoCreateTopics: true
+      bindings:
+        saga_notifications:
+          destination: Saga_${spring.application.name}
+          contentType: application/json
