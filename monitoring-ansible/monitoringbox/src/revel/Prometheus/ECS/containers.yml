@@ -1,0 +1,11 @@
+groups:
+- name: Microservice
+  rules:
+  - alert: ECS_Agent_Down
+    expr: IF sum(ecs_container_instance_active) > sum(ecs_container_instance_agent_connected)
+    for: 30s
+    lables: 
+      severity: critical
+    annotations:
+      summary = "ECS Agent down ON {{$labels.exported_instance}}",
+      description = " ECS Agent down ON {{$labels.exported_instance}} instance of {{$labels.cluster}} Cluster from last 30 seconds "

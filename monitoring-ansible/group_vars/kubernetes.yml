@@ -1,0 +1,15 @@
+############################
+kube_pvc_quota: "{{pvc_quota}}"
+kube_secret_quota: "{{secret_quota}}"
+kube_cpu_quota: "{{cpu_quota}}"
+kube_ram_quota: "{{ram_quota}}"
+
+###################################################
+# Helm download repos:
+helm_url: https://storage.googleapis.com/kubernetes-helm/helm-v2.9.1-linux-arm64.tar.gz
+helm_folder: /usr/local/bin
+
+###################################################
+# ACM Certificates - These match with namespace name. For feature teams, we can use *certs.
+# @TODO
+# Include certs based on ns. Not for feature teams. Using *.internal.gl-poc.com for now

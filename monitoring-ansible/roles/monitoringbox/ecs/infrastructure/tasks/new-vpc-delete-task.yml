@@ -1,0 +1,67 @@
+# Include variable and secrets based on type of environment
+# all is available across
+- include_vars: ../../../../../group_vars/vault.yml
+  no_log: false
+  when: env_ver == "new-vpc"
+
+- include_vars: ../../../../../group_vars/vault.yml
+  no_log: false
+  when: env_ver == "existing-vpc"
+
+## Varibale for New vpc ( Dio and Marvel Project)
+- include_vars: ../../../../../group_vars/Dio/new-vpc.yml
+  no_log: false
+  when: env_ver == "new-vpc" and project == "dio"
+
+- include_vars: ../../../../../group_vars/Marvel/new-vpc.yml
+  no_log: false
+  when: env_ver == "new-vpc" and project == "marvel"
+
+## Varibale for Existing vpc ( Dio and Marvel Project)
+
+- include_vars: ../../../../../group_vars/Dio/existing-vpc.yml
+  no_log: false
+  when: env_ver == "existing-vpc" and project == "dio"
+
+- include_vars: ../../../../../group_vars/Marvel/existing-vpc.yml
+  no_log: false
+  when: env_ver == "existing-vpc" and project == "marvel"
+
+
+
+# Ecs Cluster for Monitoing Box
+- name: ECS
+  cloudformation:
+    stack_name: "{{stack_prefix}}-ecs"
+    state: "absent"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no
+# Delete Loadbalancer
+- name: Loadbalancer
+  cloudformation:
+    stack_name: "{{stack_prefix}}-loadbalancer"
+    state: "absent"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no
+# Delete SecurityGroup
+- name: Securitygroup
+  cloudformation:
+    stack_name: "{{stack_prefix}}-Securitygroup"
+    state: "absent"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no
+# Delete VPC for Monitoing Box
+- name: Vpc
+  cloudformation:
+    stack_name: "{{stack_prefix}}-vpc"
+    state: "absent"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no

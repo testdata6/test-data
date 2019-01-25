@@ -1,0 +1,76 @@
+# Microservice Monitoing Box .
+domain: ".gl-poc.com"
+stack_prefix: plp-monitoringbox-marvel
+stack_name: plp-monitoringbox-marvel
+#plp_Certs: arn:aws:acm:us-east-1:939393939339:certificate/6d5624d3-f1c0-4bd6-8462-a8a23536abd8
+plp_Certs: arn:aws:acm:ap-southeast-1:939393939339:certificate/e4359480-15c9-4f64-8edd-54979f0bc6d0
+###########################################
+# AWS VPC Parameters
+vpc_id: vpc-5c98dd3b
+subnet_id:  subnet-b4ac8dfd
+subnet_id1: subnet-421b2b25
+az4_publicsubnet1: ap-southeast-1a
+az4_publicsubnet2: ap-southeast-1b
+az4_privatesubnet1: ap-southeast-1a
+az4_privatesubnet2: ap-southeast-1b
+
+##################################################
+# Monitoing Box Cluster Parameters
+instance_type: m4.4xlarge
+instance_count: 1
+key_name: kubernetes.infra-clusters.kube-nonprod.gl-poc.com-15:c2:fd:3b:bb:6e:13:f8:61:b7:44:2a:a5:d4:b4:d6
+ebs_volume: vol-0c29b5483e85acd91
+#cluster_subnet: PublicSubnet1
+elastic_ip: eipalloc-0e093ef3655b7b64e
+cluster_region: ap-southeast-1
+
+##################################################
+# Pormetheus Parameters
+prometheus_url: prometheus.gl-poc.com
+prometheus_volume: prometheus-data
+prometheus_volume_path: /prometheus
+prometheus_volume_source_path: /monitoringbox-data/prometheus
+kubernetes_api_url: api.infra-clusters.kube.gl-poc.com
+prometheus_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/kube-prometheus:latest
+kubernetes_api_port: 443
+prometheus_cpu: 6144
+prometheus_mem: 16384
+
+##################################################
+# Grafana Parameters
+grafana_url: devops.gl-poc.com
+grafana_volume: grafana-data
+grafana_volume_path: /var/lib/grafana
+grafana_volume_source_path: /monitoringbox-data/grafana
+grafana_db_host: mysql.weave.local
+grafana_db_name: grafana
+grafana_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/kube-grafana:latest
+grafana_smtp_host: smtp.weave.local
+grafana_cpu: 2048
+grafana_mem: 4096
+
+##################################################
+# Alertmanager Parameters
+alertmanager_url: alertmanager.gl-poc.com
+alertmanager_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/kube-alertmanager:latest
+alertmanager_cpu: 512
+alertmanager_mem: 1024
+alert_from: Alertmanager@alerts-gl-poc.com
+smtp_address: smtp.weave.local
+
+##################################################
+# SMTP Parameters
+smtp_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/grafana-smtp:latest
+ses_region: us-east-1
+smtp_cpu: 512
+smtp_mem: 1024
+
+##################################################
+# Mysql Parameters
+mysql_volume: mysql-data
+mysql_volume_path: /var/lib/mysql
+mysql_volume_source_path: /monitoringbox-data/mysqldata
+mysql_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/grafana-mysql:latest
+mysql_db_name: grafana
+mysql_cpu: 1024
+mysql_mem: 2048

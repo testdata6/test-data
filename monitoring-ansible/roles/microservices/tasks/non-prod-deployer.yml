@@ -1,0 +1,106 @@
+# Include variable and secrets based on type of environment
+# all is available across
+- include_vars: ../../group_vars/vault-nonprod.yml
+  no_log: true
+
+- include_vars: ../../group_vars/nonprod.yml
+  no_log: true
+
+- name: Define ms replica
+  set_fact:
+    ms_replica: 1
+  tags:
+      - msdeployment
+
+- name: Generate service deployment template
+  template: >
+     src="{{ role_path }}/files/non-prod/kube-deployer-backend.j2"
+     dest="/tmp/kube-deployer-{{item.service_name}}.yml"
+  with_items:
+     - { service_name: 'lad', port: '9400' , cluster: 'kernel' }
+     - { service_name: 'dcms', port: '9070', cluster: 'kernel' }
+     - { service_name: 'lec', port: '9050' , cluster: 'kernel'}
+     - { service_name: 'lmb', port: '9230' , cluster: 'kernel'}
+     - { service_name: 'lpb', port: '9080' , cluster: 'kernel'}
+     - { service_name: 'lap', port: '9030' , cluster: 'kernel'}
+     - { service_name: 'sps', port: '9350' , cluster: 'analytics'}
+     - { service_name: 'leamose', port: '9220', cluster: 'analytics' }
+     - { service_name: 'ams', port: '9330', cluster: 'analytics' }
+     - { service_name: 'pls', port: '9340', cluster: 'analytics' }
+     - { service_name: 'gb' , port: '9033' , cluster: 'kernel'}
+     - { service_name: 'lad', port: '9360' , cluster: 'kernel'}
+     - { service_name: 'lae', port: '9370' , cluster: 'kernel'}
+     - { service_name: 'ims', port: '9380', cluster: 'kernel' }
+     - { service_name: 'lcd', port: '9390' , cluster: 'kernel'}
+    # #- { service_name: 'autobahnpro', port: '9410', cluster: 'eses' }
+     - { service_name: 'iamsi', port: '9400' , cluster: 'eses'}
+     - { service_name: 'registrarsi', port: '9420', cluster: 'eses' }
+     #- { service_name: 'autobahncon', port: '9440' , cluster: 'eses'}
+     #- { service_name: 'dataingestion', port: '9450' , cluster: 'eses'}
+     - { service_name: 'tot', port: '9470' , cluster: 'analytics'}
+     - { service_name: 'rms', port: '9490' , cluster: 'analytics'}
+     - { service_name: 'mpu', port: '9460' , cluster: 'analytics'}
+
+  tags:
+      - msdeployment
+
+
+- name: Generate UI deployment template
+  template: >
+     src="{{ role_path }}/files/non-prod/kube-deployer-ui.j2"
+     dest="/tmp/kube-deployer-{{item.service_name}}.yml"
+  with_items:
+    # UI cluster pointing is not needed but for now i have added it.
+    - { service_name: 'learnerui', port: '80', cluster: 'eses' }
+    - { service_name: 'instructorui', port: '80', cluster: 'eses' }
+    - { service_name: 'loginuiplp', port: '80', cluster: 'eses' }
+    # - { service_name: 'loginui', port: '80', cluster: 'eses' }
+  tags:
+      - msdeployment
+
+
+# @TODO: For UAT this has to be RDS
+- name: Deploy microservices
+  shell: kubectl apply -f "/tmp/kube-deployer-{{item.service_name}}.yml" --namespace "{{ns_name}}"
+  when: status == "present"
+  with_items:
+    - { service_name: 'lad' }
+    - { service_name: 'dcms' }
+    - { service_name: 'lec' }
+    - { service_name: 'lmb' }
+    - { service_name: 'lpb' }
+    - { service_name: 'lap' }
+    - { service_name: 'sps' }
+    - { service_name: 'leamose' }
+    - { service_name: 'ams' }
+    - { service_name: 'pls' }
+    - { service_name: 'gb' }
+    - { service_name: 'lad'  }
+    - { service_name: 'lae' }
+    - { service_name: 'ims' }
+    - { service_name: 'lcd' }
+    #- { service_name: 'autobahnpro' }
+    - { service_name: 'iamsi' }
+    - { service_name: 'registrarsi' }
+    #- { service_name: 'autobahncon' }
+    - { service_name: 'learnerui' }
+    - { service_name: 'instructorui' }
+    - { service_name: 'loginuiplp' }
+    # - { service_name: 'loginui' }
+    #- { service_name: 'dataingestion' }
+    - { service_name: 'tot' }
+    - { service_name: 'rms' }
+    - { service_name: 'mpu' }
+  tags:
+      - msdeployment
+
+
+ #Delete the deployer
+- name: Delete Micsroservices Deployment
+  shell: kubectl delete services,deploy -l tier=backend --namespace "{{ns_name}}"
+  when: status == "absent"
+
+  #Delete the deployer
+- name: Delete Micsroservices Deployment
+  shell: kubectl delete services,deploy -l tier=frontend --namespace "{{ns_name}}"
+  when: status == "absent"

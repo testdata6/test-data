@@ -1,0 +1,67 @@
+region: us-west-2
+metrics:
+- aws_namespace: AWS/ELB
+  aws_metric_name: HealthyHostCount
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Average, Maximum]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: UnHealthyHostCount
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Average, Maximum]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: RequestCount
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Sum]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: Latency
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Average, Maximum]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: SurgeQueueLength
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Sum]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_Backend_2XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_Backend_3XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_Backend_4XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_Backend_4XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_Backend_5XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_Backend_5XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: HTTPCode_ELB_5XX
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+
+- aws_namespace: AWS/ELB
+  aws_metric_name: UnHealthyHostCount
+  aws_dimensions: [AvailabilityZone, LoadBalancerName]
+  aws_statistics: [Maximum, Average]
+

@@ -1,0 +1,12 @@
+---
+
+# Private zone will be used for couchbase running on VMs
+
+- name: Create private zone for namespace for couchbase
+  route53_zone:
+    zone: "{{ ns_name }}.com"
+    state: "{{status}}"
+    vpc_id: '{{ vpc_id }}'
+    vpc_region: '{{ vpc_region }}'
+    comment: namespace internal domain
+  register: route53_op

@@ -1,0 +1,6 @@
+# Include individual deployer
+
+- include: pre-prod-deployer.yml
+  when: platform == "kubernetes"
+
+-

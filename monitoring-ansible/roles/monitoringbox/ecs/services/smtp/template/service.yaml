@@ -1,0 +1,82 @@
+Description: >
+    This is an example of a long running ECS service that serves a JSON API of products.
+
+Parameters:
+
+    VPC:
+        Description: The VPC that the ECS cluster is deployed to
+        Type: AWS::EC2::VPC::Id
+
+    Cluster:
+        Description: Please provide the ECS Cluster ID that this service should run on
+        Type: String
+
+    DesiredCount:
+        Description: How many instances of this task should we run across our cluster?
+        Type: Number
+        Default: 1
+
+    Listener:
+        Description: The Application Load Balancer listener to register with
+        Type: String
+    SesUser:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+
+    SesPass:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    SesRegion:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    SmtpCpu:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    SmtpMemory:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    SmtpImage:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+Resources:
+
+    Service:
+        Type: AWS::ECS::Service
+        Properties:
+            Cluster: !Ref Cluster
+            DesiredCount: !Ref DesiredCount
+            TaskDefinition: !Ref TaskDefinition
+
+    TaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        Properties:
+            Family: smtp
+            ContainerDefinitions:
+                - Name: smtp
+                  Essential: true
+                  Image: !Ref SmtpImage
+                  Cpu: !Ref SmtpCpu
+                  Memory: !Ref SmtpMemory
+                  Environment:
+                    - Name: SES_USER
+                      Value: !Ref SesUser
+                    - Name: SES_PASSWORD
+                      Value: !Ref SesPass
+                    - Name: SES_REGION
+                      Value: !Ref SesRegion
+                    - Name: RELAY_NETWORKS
+                      Value: ";0.0.0.0/0"
+
+                  PortMappings:
+                    - ContainerPort: 25
+                  LogConfiguration:
+                    LogDriver: awslogs
+                    Options:
+                        awslogs-group: !Ref AWS::StackName
+                        awslogs-region: !Ref AWS::Region
+
+    CloudWatchLogsGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Ref AWS::StackName
+            RetentionInDays: 3

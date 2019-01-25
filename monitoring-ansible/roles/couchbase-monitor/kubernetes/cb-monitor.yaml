@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1 # for versions before 1.8.0 use apps/v1beta1
+kind: Deployment
+metadata:
+  name: cluster-1
+  namespace: plpv2-nfr
+spec:
+  selector:
+    matchLabels:
+      app: cluster-1
+      tier: backend
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: cluster-1
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9119"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: cluster-1-container
+        image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/couchbase-exporter:latest
+        resources:
+          limits:
+            cpu: 1
+            memory: 1G
+          requests:
+            cpu: 1
+            memory: 1G
+        env:
+        - name: COUCHBASE_HOST
+          value: "10.0.56.15"
+        - name: COUCHBASE_PORT
+          value: "8091"
+        - name: PROMETHEUS_PORT
+          value: "9119"
+        - name: COUCHBASE_QUERY_PORT
+          value: "8093"
+        - name: COUCHBASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+               name: couchbase-monitoring
+               key: username
+        - name: COUCHBASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: couchbase-monitoring
+              key: password
+        ports:
+        - name: svc-port
+          containerPort: 9119

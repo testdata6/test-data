@@ -1,0 +1,2 @@
+{{ define "hipchat.default.from" }}{{ template "__alertmanager" . }}{{ end }}
+{{ define "hipchat.default.message" }}{{ template "__subject" . }}{{ .GroupLabels.app }}{{ .GroupLabels.alertname }}{{ end }}

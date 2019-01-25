@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1 # for versions before 1.8.0 use apps/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-cloudwatch
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: prometheus-cloudwatch
+      tier: backend
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: prometheus-cloudwatch
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9106"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: prometheus-cloudwatch-container
+        image: monitoring-box/cloudwatch:v1.0
+        resources:
+          limits:
+            cpu: 1
+            memory: 1G
+          requests:
+            cpu: 1
+            memory: 1G
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+               name: fluentd-aws-es
+               key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fluentd-aws-es
+              key: AWS_SECRET_KEY_ID
+        ports:
+        - name: svc-port
+          containerPort: 9106

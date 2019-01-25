@@ -1,0 +1,158 @@
+Description: >
+
+    This Code will deploy a Microservice Monitoing Box .
+      Last Modified: 05th June 2018
+    Author: PLP Devops <pmaddox@amazon.com>
+
+Resources:
+
+    VPC:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/monitoring-box/infrastructure/vpc.yaml
+            Parameters:
+                EnvironmentName:    !Ref AWS::StackName
+                VpcCIDR:            10.180.0.0/16
+                PublicSubnet1CIDR:  10.180.8.0/21
+                PublicSubnet2CIDR:  10.180.16.0/21
+                PrivateSubnet1CIDR: 10.180.24.0/21
+                PrivateSubnet2CIDR: 10.180.32.0/21
+
+    SecurityGroups:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/monitoring-box/infrastructure/security-groups.yaml
+            Parameters:
+                EnvironmentName: !Ref AWS::StackName
+                VPC: !GetAtt VPC.Outputs.VPC
+
+    ALB:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/monitoring-box/infrastructure/load-balancers.yaml
+            Parameters:
+                EnvironmentName: !Ref AWS::StackName
+                VPC: !GetAtt VPC.Outputs.VPC
+                Subnets: !GetAtt VPC.Outputs.PublicSubnets
+                SecurityGroup: !GetAtt SecurityGroups.Outputs.LoadBalancerSecurityGroup
+
+    ECS:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/monitoring-box/infrastructure/ecs-cluster.yaml
+            Parameters:
+                EnvironmentName: !Ref AWS::StackName
+                InstanceType: m4.4xlarge
+                ClusterSize: 1
+                VPC: !GetAtt VPC.Outputs.VPC
+                SecurityGroup: !GetAtt SecurityGroups.Outputs.ECSHostSecurityGroup
+                Subnets: !GetAtt VPC.Outputs.PublicSubnet2
+                KeyName: ${KeyName}
+                EbsVolume: ${EbsVolume}
+                ElasticIP: ${ElasticIP}
+                Region: ${REGION}
+
+    PrometheusService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/plp-monitoring-box/services/prometheus-service/service.yaml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 1
+                Listener: !GetAtt ALB.Outputs.Listener
+                Path: prometheus.example.com
+                SourceVolume: prometheus-data
+                ContainerPath: /prometheus
+                SourcePath: /monitoringbox-data/prometheus
+                kubecluster: kube-api-address.exmaple.com
+                Image: monitoring-box/prometheus:v1.0
+                kubeclusterport: 443
+                Cpu: 8192
+                Memory: 16384
+
+    GrafanaService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/monitoring-box/services/grafana-service/service.yaml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 1
+                Listener: !GetAtt ALB.Outputs.Listener
+                Path: grafana.exmaple.com
+                Grafanahost: grafana.exmaple.com
+                ECSServiceAutoScalingRoleARN: !GetAtt ECS.Outputs.ECSServiceAutoScalingRole
+                SourceVolume: grafana-data
+                ContainerPath: /var/lib/grafana
+                SourcePath: /monitoringbox-data/grafana
+                GrafanaPassword: $GRAFANA_PASS
+                GrafanaDBhost: mysql.weave.local
+                GrafanaDBUser: root
+                GrafanaDBPass: $GRAFANA_DB_PASS
+                GrafanaDBName: grafana
+                Image: monitoring-box/grafana:v1.0
+                GrafanaSmtphost: smtp.weave.local
+                Cpu: 4096
+                Memory: 8192
+
+    AlertmanagerService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/plp-monitoring-box/services/alertmanager-service/service.yaml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 1
+                Listener: !GetAtt ALB.Outputs.Listener
+                Path: alertmanager.expample.com
+                Image: monitoring-box/alertmanager:v1.0
+                Cpu: 1024
+                Memory: 4096
+                AlertFrom: Alertmanager@alerts.example.com
+                SmtpAddress: smtp.weave.local
+
+    SmtpService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/plp-monitoring-box/services/smtp/service.yaml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 1
+                Listener: !GetAtt ALB.Outputs.Listener
+                SesUser: ${SES_USER}
+                Image: monitoring-box/smtp:v1.0
+                SesPass: ${SES_PASS}
+                SesRegion: ${SES_REGION}
+                Cpu: 512
+                Memory: 2048
+
+    MysqlService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/plp-monitoring-box/services/mysql/service.yaml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 1
+                Listener: !GetAtt ALB.Outputs.Listener
+                Path: mysql.gl-poc.com
+                SourceVolume: mysql-data
+                ContainerPath: /var/lib/mysql
+                SourcePath: /monitoringbox-data/mysqldata
+                Image: monitoring-box/mysql:v1.0
+                MysqlDBName: grafana
+                MysqlrootPass: $GRAFANA_DB_PASS
+                Cpu: 2048
+                Memory: 4096
+
+Outputs:
+
+  PrometheusServiceUrl:
+      Description: The URL endpoint for the Prometheus Service
+      Value: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "graph" ]]
+
+  GrafanaServiceUrl:
+      Description: The URL endpoint for the Grafana Service
+      Value: !Join ["", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "/" ]]

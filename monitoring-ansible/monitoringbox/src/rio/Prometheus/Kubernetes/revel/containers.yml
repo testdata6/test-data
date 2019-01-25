@@ -1,0 +1,24 @@
+groups:
+- name: Application Alerts
+  interval: 30s   # defaults to global interval
+  rules:
+  - alert: request_execution_time
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      request_method_url_resp_code_time_sum > 5000
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "hello."
+  - alert: failed_request_with_code_4XX_5XX
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      request_method_url_resp_code_time_sum { status_code !="200" }
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "hello."

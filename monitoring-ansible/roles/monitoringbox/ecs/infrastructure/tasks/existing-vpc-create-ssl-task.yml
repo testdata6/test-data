@@ -1,0 +1,102 @@
+# Include variable and secrets based on type of environment
+# all is available across
+- include_vars: ../../../../../group_vars/vault.yml
+  no_log: false
+  when: env_ver == "new-vpc"
+
+- include_vars: ../../../../../group_vars/vault.yml
+  no_log: false
+  when: env_ver == "existing-vpc"
+
+## Varibale for New vpc ( Dio and Marvel Project)
+- include_vars: ../../../../../group_vars/Dio/new-vpc.yml
+  no_log: false
+  when: env_ver == "new-vpc"
+
+- include_vars: ../../../../../group_vars/Marvel/new-vpc.yml
+  no_log: false
+  when: env_ver == "new-vpc"
+
+## Varibale for Existing vpc ( Dio and Marvel Project)
+
+- include_vars: ../../../../../group_vars/Dio/existing-vpc.yml
+  no_log: false
+  when: env_ver == "existing-vpc" and project == "dio"
+
+- include_vars: ../../../../../group_vars/Marvel/existing-vpc.yml
+  no_log: false
+  when: env_ver == "existing-vpc" and project == "marvel"
+
+# Create VPC for Monitoing Box
+- name: Securitygroup
+  cloudformation:
+    stack_name: "{{stack_prefix}}-Securitygroup"
+    state: "present"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no
+    template: "{{ role_path }}/ecs/infrastructure/templates/new-vpc/securitygroup/security-groups.yaml"
+    #Capabilities.member.N: yes
+    #role_arn: arn:aws:iam::939393939339:role/monitoring
+    template_parameters:
+      EnvironmentName: "{{stack_name}}"
+      VPC: "{{vpc_id}}"
+    tags:
+      Stack: "{{stack_name}}"
+  register: securitygroup_stack
+# Create Application Loadbalancer for Monitoing Box
+- name: Loadbalancer
+  cloudformation:
+    stack_name: "{{stack_prefix}}-loadbalancer"
+    state: "present"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no
+    template: "{{ role_path }}/ecs/infrastructure/templates/new-vpc/loadbalancer/load-balancers-ssl.yaml"
+    #Capabilities.member.N: yes
+    #role_arn: arn:aws:iam::939393939339:role/monitoring
+    template_parameters:
+      EnvironmentName: "{{stack_name}}"
+      VPC: "{{vpc_id}}"
+      Subnets: "{{subnet_id}},{{subnet_id1}}"
+      SecurityGroup: "{{securitygroup_stack.stack_outputs.LoadBalancerSecurityGroup}}"
+      CertificateARN: "{{plp_Certs}}"
+    tags:
+      Stack: "{{stack_name}}"
+  register: loadbalancer_stack
+- name: loadbalancer variable
+  set_fact:
+    listener: "{{loadbalancer_stack.stack_outputs.Listener}}"
+# Ecs Cluster for Monitoing Box
+- name: ECS
+  cloudformation:
+    stack_name: "{{stack_prefix}}-ecs"
+    state: "present"
+    region: "{{cluster_region}}"
+    disable_rollback: false
+    template_format: yaml
+    validate_certs: no
+    template: "{{ role_path }}/ecs/infrastructure/templates/new-vpc/ecs/ecs-cluster.yaml"
+    #Capabilities.member.N: yes
+    #role_arn: arn:aws:iam::939393939339:role/monitoring
+    template_parameters:
+      EnvironmentName: "{{stack_name}}"
+      InstanceType: "{{instance_type}}"
+      ClusterSize: "{{instance_count}}"
+      VPC: "{{vpc_id}}"
+      SecurityGroup: "{{securitygroup_stack.stack_outputs.ECSHostSecurityGroup}}"
+      Subnets: "{{subnet_id}}"
+      KeyName: "{{key_name}}"
+      EbsVolume: "{{ebs_volume}}"
+      ElasticIP: "{{elastic_ip}}"
+      Region: "{{cluster_region}}"
+
+    tags:
+      Stack: "{{stack_name}}"
+  register: ecs_stack
+- name: Cluster variable
+  set_fact:
+    cluster: "{{ecs_stack.stack_outputs.Cluster}}"
+    ecsserviceautoscalingrole: "{{ecs_stack.stack_outputs.ECSServiceAutoScalingRole}}"

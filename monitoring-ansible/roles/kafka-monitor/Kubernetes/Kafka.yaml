@@ -1,0 +1,42 @@
+apiVersion: extensions/v1beta1 # for versions before 1.8.0 use apps/v1beta1
+kind: Deployment
+metadata:
+  name: kafka-perf-monitoring
+  namespace: ${namespace}
+spec:
+  selector:
+    matchLabels:
+      app: kafka-perf-monitoring
+      tier: backend
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: kafka-perf-monitoring
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9308"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: kafka-perf-monitoring
+        image: monitoring-box/kafka:v1.0
+        args:
+          - --kafka.server=kafkaaddress:9092
+        resources:
+          limits:
+            cpu: 1
+            memory: 1G
+          requests:
+            cpu: 1
+            memory: 1G
+        ports:
+        - name: svc-port
+          containerPort: 9308

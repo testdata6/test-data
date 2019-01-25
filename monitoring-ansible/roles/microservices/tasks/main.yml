@@ -1,0 +1,7 @@
+# Include individual deployer
+
+- include: pre-prod-deployer.yml
+  when: env_ver == "pre-prod"
+
+- include: non-prod-deployer.yml
+  when: env_ver == "non-prod"

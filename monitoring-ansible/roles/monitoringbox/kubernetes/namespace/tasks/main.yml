@@ -1,0 +1,40 @@
+---
+# Create namespace object and create other objects
+
+- name: Define Variable
+  set_fact:
+    ram_quota: 32Gi
+    cpu_quota: 15
+    secret_quota: 10
+    pvc_quota: 50
+  when: platform == "kubernetes"
+
+- name: Create a namespace
+  k8s_v1_namespace:
+    name: "{{ns_name}}"
+    labels:
+      label_env: "{{ env }}"
+      label_ver: "{{ env_ver }}"
+    kubeconfig: "{{ '~' | expanduser }}/.kube/config"
+    state: "{{status}}"
+
+
+# Call other plays of this role
+# @TODO: Make quota more configureable
+- include: quota.yml
+  when: platform == "kubernetes"
+  tags:
+      - quota
+
+- include: sa.yml
+  tags:
+      - serviceaccount
+
+- include: rolebindings.yml
+  tags:
+      - rolebinding
+
+# Create all secrets required by namespace
+- include: secret.yml
+  tags:
+      - secret

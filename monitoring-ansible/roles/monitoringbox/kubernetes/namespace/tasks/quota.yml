@@ -1,0 +1,31 @@
+---
+# Create Assign default quotas for Namespaces. Assuming non-prod namespaces
+
+# - name: Define Variable
+#   set_fact:
+#     ram_quota: 200Gi
+#     cpu_quota: 20
+#     secret_quota: 30
+#     pvc_quota: 20
+#   when: env_ver == "pre-prod"
+
+- name: Define Variable
+  set_fact:
+    ram_quota: 32Gi
+    cpu_quota: 10
+    secret_quota: 10
+    pvc_quota: 50
+  when: platform == "kubernetes"
+
+
+- name: Create ns quota
+  k8s_v1_resource_quota:
+    name: "{{ns_name}}-quota"
+    namespace: "{{ns_name}}"
+    spec_hard:
+        persistentvolumeclaims: "{{ pvc_quota }}"
+        secrets: "{{ secret_quota }}"
+        requests.cpu: "{{ cpu_quota  }}"
+        requests.memory: "{{ ram_quota }}"
+    kubeconfig: "{{ '~' | expanduser }}/.kube/config"
+    state: "{{status}}"

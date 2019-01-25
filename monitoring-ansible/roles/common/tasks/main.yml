@@ -1,0 +1,64 @@
+---
+# Include variable and secrets based on type of environment
+# all is available across
+- include_vars: ../../group_vars/vault.yml
+  no_log: true
+  when: platform == "kubernetes"
+
+- include_vars: ../../group_vars/kubernetes.yml
+  no_log: true
+  when: env_ver == "kubernetes"
+
+# Necessary operations needed for any play
+
+- name: Create kube-directories
+  file:
+    path: "{{ '~' | expanduser }}/.kube"
+    state: directory
+    mode: 0775
+
+- name: Decrypt from vault and copy over kubeconfig
+  copy:
+     src: "../../group_vars/kubeconfig"
+     dest: "{{ '~' | expanduser }}/.kube/config"
+     mode: 0644
+  when: platform == "kubernetes"
+
+- name: download and install helm binaries
+  become: yes
+  become_user: root
+  unarchive:
+    src: "{{ helm_url }}"
+    dest: "{{ helm_folder }}"
+    copy: no
+  tags:
+    - helm
+
+- name: download and install helm binaries
+  become: yes
+  become_user: root
+  unarchive:
+    src: "{{ helm_url }}"
+    dest: "{{ helm_folder }}"
+    copy: no
+  tags:
+    - helm
+
+- name: Initialize helm so that directories are created.
+  command: helm init
+  ignore_errors: True
+  tags:
+    - helm
+
+- name: Setup helm stable repo
+  command: helm repo add "{{ item.name }}" "{{ item.repo }}"
+  with_items:
+    - { name: 'stable', repo: 'https://kubernetes-charts.storage.googleapis.com/' }
+    - { name: 'incubator', repo: 'https://kubernetes-charts-incubator.storage.googleapis.com/' }
+  tags:
+    - helm
+
+###############################################################################
+
+# Setup route53 hosted zone for ns
+#- include: route53.yml

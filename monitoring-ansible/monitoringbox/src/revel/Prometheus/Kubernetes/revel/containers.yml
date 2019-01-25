@@ -1,0 +1,14 @@
+groups:
+- name: Container Alerts
+  interval: 30s   # defaults to global interval
+  rules:
+  - alert: Container_Memory_Usage_>1.5GB
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      container_memory_working_set_bytes{image!=""} > 1.5*1024*1204*1024
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Container Memory Usage is Greater than 1.5GB for {{$labels.namespace}}/{{$labels.pod_name}} "

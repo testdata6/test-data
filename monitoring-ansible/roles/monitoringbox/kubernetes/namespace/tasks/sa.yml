@@ -1,0 +1,22 @@
+---
+# Create SA accounts. These are primarily for kube-dashboard
+
+- name: Create a ro service account for ns
+  k8s_v1_service_account:
+    name: "{{ns_name}}-ro"
+    namespace: "{{ns_name}}"
+    labels:
+      label_env: "{{ env }}"
+      label_ver: "{{ env_ver }}"
+    kubeconfig: "{{ '~' | expanduser }}/.kube/config"
+    state: "{{status}}"
+
+- name: Create an admin service account for ns
+  k8s_v1_service_account:
+    name: "{{ns_name}}-admin"
+    namespace: "{{ns_name}}"
+    labels:
+      label_env: "{{ env }}"
+      label_ver: "{{ env_ver }}"
+    kubeconfig: "{{ '~' | expanduser }}/.kube/config"
+    state: "{{status}}"

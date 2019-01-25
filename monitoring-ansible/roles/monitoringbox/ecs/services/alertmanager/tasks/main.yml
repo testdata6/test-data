@@ -1,0 +1,13 @@
+---
+
+# Setup MonitoringBox
+
+
+- include: service-create-task.yml
+  when: action_type == "create" and platform == "ecs"
+
+- include: service-create-task.yml
+  when: action_type == "update" and platform == "ecs"
+
+- include: service-delete-task.yml
+  when: action_type == "delete" and platform == "ecs"

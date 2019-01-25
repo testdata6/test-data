@@ -1,0 +1,195 @@
+groups:
+- name: kube-state-metrics.rules
+  rules:
+  - alert: DeploymentGenerationMismatch
+    expr: kube_deployment_status_observed_generation != kube_deployment_metadata_generation
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: Observed deployment generation does not match expected one for deployment {{$labels.namespace}}/{{$labels.deployment}}
+      summary: Deployment is outdated
+  - alert: PodCrashed
+    expr: ((kube_deployment_status_replicas_updated != kube_deployment_spec_replicas)
+      or (kube_deployment_status_replicas_available != kube_deployment_spec_replicas))
+      unless (kube_deployment_spec_paused == 1)
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: Replicas are not updated and available for deployment {{$labels.namespace}}/{{$labels.deployment}}
+      summary: Deployment replicas are outdated
+  - alert: DaemonSetRolloutStuck
+    expr: kube_daemonset_status_number_ready / kube_daemonset_status_desired_number_scheduled * 100 < 100
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: Only {{$value}}% of desired pods scheduled and ready for daemon set {{$labels.namespace}}/{{$labels.daemonset}}
+      summary: DaemonSet is missing pods
+  - alert: K8SDaemonSetsNotScheduled
+    expr: kube_daemonset_status_desired_number_scheduled - kube_daemonset_status_current_number_scheduled  > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: A number of daemonsets are not scheduled.
+      summary: Daemonsets are not scheduled correctly
+  - alert: DaemonSetsMissScheduled
+    expr: kube_daemonset_status_number_misscheduled > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: A number of daemonsets are running where they are not supposed to run.
+      summary: Daemonsets are not scheduled correctly
+  - alert: PodFrequentlyRestarting
+    expr: increase(kube_pod_container_status_restarts_total[30m]) > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: Pod {{$labels.namespace}}/{{$labels.pod}} was restarted within 30 Minutes
+      summary: Pod is restarting frequently .
+  - alert: PodTerminated
+    expr: kube_pod_container_status_terminated_reason{reason != "Completed"} > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: Pods Terminated {{$labels.namespace}}/{{$labels.container}}/{{$labels.pod}} with reason {{$labels.reason}} .
+      summary: Pods_Terminated
+  - alert: K8S_Node_NotReady
+    expr: kube_node_status_condition{status="true",condition != "Ready"} > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: Node is Not Ready {{$labels.node}} with reason {{$labels.condition}} .
+      summary: K8S_Node_NotReady
+- name: Application Alerts
+  interval: 30s   # defaults to global interval
+  rules:
+  - alert: request_execution_time_>60s
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      request_method_url_resp_code_time_sum > 60000
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Request time taken {{ humanize $value}} ms. Reported by endpoint {{ $labels.endpointURL}} of service {{ $labels.app }}."
+  - alert: failed_request_with_code_4xx_5xx
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      request_method_url_resp_code_time_sum { status_code !="200" }
+    for: 60s
+    labels:
+      severixty: critical
+    annotations:
+      description: "Request failed with {{ $labels.status_code}} Code, Reported by endpoint {{ $labels.endpointURL}} of service {{ $labels.app }}."
+  - alert: Environment_Availability
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      sum(response_count_by_response_code{status_code="200"}) by (kubernetes_namespace) / sum (response_count_by_response_code) by (kubernetes_namespace) * 100 < 95
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: " Environment_Availability for {{ $labels.kubernetes_namespace}} env is {{ humanize $value}}% ."
+  - alert: Microservice_Availability
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      sum(response_count_by_response_code{status_code="200"}) by (kubernetes_namespace ,app) / sum (response_count_by_response_code) by (kubernetes_namespace,app) * 100 < 95
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: " Microservice_Availability for {{ $labels.app}}/{{ $labels.kubernetes_namespace}} env is {{ humanize $value}}% ."
+- name: CouchbaseDB Alerts
+  interval: 30s   # defaults to global interval
+  rules:
+  - alert: Couchbase_queries_execution_time_>_5m
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_queries_servicetime > 300000
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Time Taken by query {{ humanize $value}} ms and has state  {{ $labels.state}} by query statement {{ $labels.statement }} with User {{ $labels.users}}."
+  - alert: Couchbase_queries_Timeout
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_queries_servicetime{state="timeout"}
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: " Timeout Query and Time Taken by query {{ humanize $value}} ms and has state  {{ $labels.state}} by query statement {{ $labels.statement }} with User {{ $labels.users}}."
+  - alert: QA-Test-Execution
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_queries_servicetime{users="test-user"}
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: " Timeout Query and Time Taken by query {{ humanize $value}} ms and has state  {{ $labels.state}} by query statement {{ $labels.statement }} with User {{ $labels.users}} ."
+  - alert: Couchbase_Cluster_Free_Disk_space_<_50
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      sum(couchbase_cluster_storagetotals_hdd_free) by (app,kubernetes_namespace)/sum(couchbase_cluster_storagetotals_hdd_total) by (app,kubernetes_namespace) *100 < 50
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Couchbase Cluster Disk space Free {{humanize $value}}% for {{$labels.app}} Cluster / {{ $labels.kubernetes_namespace}} Namespace"
+  - alert: Couchbase_Node_Disk_Kernel
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_node_interestingstats_couch_docs_actual_disk_size{app="couchbase-kernel-cluster"}/200000000000*100 > 70
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Couchbase DataNode Disk space Free {{humanize $value}}% for {{$labels.instance}} Node / {{ $labels.kubernetes_namespace}} Namespace"
+  - alert: Couchbase_Node_Disk_Eses
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_node_interestingstats_couch_docs_actual_disk_size{app="couchbase-eses-cluster"}/100000000000*100 > 70
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Couchbase Cluster Dask space Free {{humanize $value}}% for {{$labels.instance}} Node / {{ $labels.kubernetes_namespace}} Namespace"
+  - alert: Couchbase_Node_Disk_Analytics
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_node_interestingstats_couch_docs_actual_disk_size{app="couchbase-analytics-cluster"}/200000000000*100 > 70
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Couchbase Cluster Dask space Free {{humanize $value}}% for {{$labels.instance}} Node / {{ $labels.kubernetes_namespace}} Namespace"
+  - alert: couchbase_bucket_opspersec_>_40K
+    # Expressions remain PromQL as before and can be spread over
+    # multiple lines via YAML’s multi-line strings.
+    expr: |
+      couchbase_bucket_basicstats_opspersec > 40000
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      description: "Couchbase DataNode Disk space Free {{humanize $value}}% for {{$labels.bucket}} Node / {{ $labels.kubernetes_namespace}} Namespace / {{ $labels.app}} Cluster "

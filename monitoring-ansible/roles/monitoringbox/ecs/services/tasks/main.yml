@@ -1,0 +1,8 @@
+---
+
+# Setup MonitoingBox services
+- include: ../mysql/tasks/main.yml
+- include: ../smtp/tasks/main.yml
+- include: ../grafana/tasks/main.yml
+- include: ../prometheus/tasks/main.yml
+- include: ../alertmanager/tasks/main.yml

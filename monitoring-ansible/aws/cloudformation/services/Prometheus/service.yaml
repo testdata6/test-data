@@ -1,0 +1,171 @@
+Description: >
+    This is an example of a long running ECS service that serves a JSON API of products.
+
+Parameters:
+
+    VPC:
+        Description: The VPC that the ECS cluster is deployed to
+        Type: AWS::EC2::VPC::Id
+
+    Cluster:
+        Description: Please provide the ECS Cluster ID that this service should run on
+        Type: String
+
+    DesiredCount:
+        Description: How many instances of this task should we run across our cluster?
+        Type: Number
+        Default: 2
+
+    Listener:
+        Description: The Application Load Balancer listener to register with
+        Type: String
+
+    Prometheusurl:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /graph
+    PrometheusSourceVolume:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: prometheus-data
+    PrometheusContainerPath:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /prometheus
+    PrometheusSourcePath:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /monitoringbox-data
+    kubecluster:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    kubeclusterport:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    PrometheusCpu:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    PrometheusMemory:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    PrometheusImage:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+Resources:
+
+    Service:
+        Type: AWS::ECS::Service
+        DependsOn: ListenerRule
+        Properties:
+            Cluster: !Ref Cluster
+            Role: !Ref ServiceRole
+            DesiredCount: !Ref DesiredCount
+            TaskDefinition: !Ref TaskDefinition
+            LoadBalancers:
+                - ContainerName: "prometheus"
+                  ContainerPort: 9090
+                  TargetGroupArn: !Ref TargetGroup
+
+    TaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        Properties:
+            Family: prometheus
+            ContainerDefinitions:
+                - Name: prometheus
+                  Essential: true
+                  Image: !Ref PrometheusImage
+                  Cpu: !Ref PrometheusCpu
+                  Memory: !Ref PrometheusMemory
+                  MountPoints:
+                    - SourceVolume: !Ref PrometheusSourceVolume
+                      ContainerPath: !Ref PrometheusContainerPath
+                  Environment:
+                    - Name: KUBERNETES_SERVICE_HOST
+                      Value: !Ref kubecluster
+                    - Name: KUBERNETES_SERVICE_PORT
+                      Value: !Ref kubeclusterport
+                  PortMappings:
+                    - ContainerPort: 9090
+                  LogConfiguration:
+                    LogDriver: awslogs
+                    Options:
+                        awslogs-group: !Ref AWS::StackName
+                        awslogs-region: !Ref AWS::Region
+            Volumes:
+              - Host:
+                  SourcePath: !Ref PrometheusSourcePath
+                Name:  !Ref PrometheusSourceVolume
+
+
+
+    CloudWatchLogsGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Ref AWS::StackName
+            RetentionInDays: 3
+
+    TargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            VpcId: !Ref VPC
+            Port: 9090
+            Protocol: HTTP
+            Matcher:
+                HttpCode: 200-299
+            HealthCheckIntervalSeconds: 10
+            HealthCheckPath: /graph
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 5
+            HealthyThresholdCount: 2
+
+    ListenerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            ListenerArn: !Ref Listener
+            Priority: 1
+            Conditions:
+                - Field: host-header
+                  Values:
+                    - !Ref Prometheusurl
+            Actions:
+                - TargetGroupArn: !Ref TargetGroup
+                  Type: forward
+
+    # This IAM Role grants the service access to register/unregister with the
+    # Application Load Balancer (ALB). It is based on the default documented here:
+    # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_IAM_role.html
+    ServiceRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub ecs-service-${AWS::StackName}
+            Path: /
+            AssumeRolePolicyDocument: |
+                {
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": { "Service": [ "ecs.amazonaws.com" ]},
+                        "Action": [ "sts:AssumeRole" ]
+                    }]
+                }
+            Policies:
+                - PolicyName: !Sub ecs-service-${AWS::StackName}
+                  PolicyDocument:
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:AuthorizeSecurityGroupIngress",
+                                    "ec2:Describe*",
+                                    "ec2:*",
+                                    "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                                    "elasticloadbalancing:Describe*",
+                                    "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                                    "elasticloadbalancing:DeregisterTargets",
+                                    "elasticloadbalancing:DescribeTargetGroups",
+                                    "elasticloadbalancing:DescribeTargetHealth",
+                                    "elasticloadbalancing:RegisterTargets"
+                                ],
+                                "Resource": "*"
+                        }]
+                    }

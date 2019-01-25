@@ -1,0 +1,20 @@
+---
+
+# Setup couchbase
+# - Based on the type of environment couchbase deployment would differ
+# - Feature teams : Single container with empty dir
+# _ Non-Prod: Dev/QA - Helm deployed containers
+# - Pre-Prod ( UAT/Perf): VMs
+
+# This is for Existing Vpc
+#- include: existing-vpc-task.yml
+#  when: env_ver == "existing-vpc"
+
+- include: service-create-task.yml
+  when: env_ver == "new-vpc" and action_type == "create" and platform == "ecs"
+
+- include: service-update-task.yml
+  when: env_ver == "new-vpc" and action_type == "update" and platform == "ecs"
+
+- include: service-delete-task.yml
+  when: env_ver == "new-vpc" and action_type == "delete" and platform == "ecs"

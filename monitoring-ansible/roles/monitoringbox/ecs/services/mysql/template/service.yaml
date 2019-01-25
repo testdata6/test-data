@@ -1,0 +1,96 @@
+Description: >
+    This is an example of a long running ECS service that serves a JSON API of products.
+
+Parameters:
+
+    VPC:
+        Description: The VPC that the ECS cluster is deployed to
+        Type: AWS::EC2::VPC::Id
+
+    Cluster:
+        Description: Please provide the ECS Cluster ID that this service should run on
+        Type: String
+
+    DesiredCount:
+        Description: How many instances of this task should we run across our cluster?
+        Type: Number
+        Default: 1
+
+    Listener:
+        Description: The Application Load Balancer listener to register with
+        Type: String
+
+    MysqlSourceVolume:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: mysql-data
+    MysqlContainerPath:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /var/lib/mysql
+    MysqlSourcePath:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /monitoringbox-data
+    MysqlrootPass:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    MysqlDBName:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    MysqlCpu:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    MysqlMemory:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+    MysqlImage:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+
+Resources:
+
+    Service:
+        Type: AWS::ECS::Service
+        Properties:
+            Cluster: !Ref Cluster
+            DesiredCount: !Ref DesiredCount
+            TaskDefinition: !Ref TaskDefinition
+
+    TaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        Properties:
+            Family: mysql
+            ContainerDefinitions:
+                - Name: mysql
+                  Essential: true
+                  Image: !Ref MysqlImage
+                  Cpu: !Ref MysqlCpu
+                  Memory: !Ref MysqlMemory
+                  MountPoints:
+                    - SourceVolume: !Ref MysqlSourceVolume
+                      ContainerPath: !Ref MysqlContainerPath
+                  Environment:
+                    - Name: MYSQL_ROOT_PASSWORD
+                      Value: !Ref MysqlrootPass
+                    - Name: MYSQL_DATABASE
+                      Value: !Ref MysqlDBName
+
+                  PortMappings:
+                    - ContainerPort: 3306
+                  LogConfiguration:
+                    LogDriver: awslogs
+                    Options:
+                        awslogs-group: !Ref AWS::StackName
+                        awslogs-region: !Ref AWS::Region
+            Volumes:
+              - Host:
+                  SourcePath: !Ref MysqlSourcePath
+                Name:  !Ref MysqlSourceVolume
+
+
+    CloudWatchLogsGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Ref AWS::StackName
+            RetentionInDays: 3

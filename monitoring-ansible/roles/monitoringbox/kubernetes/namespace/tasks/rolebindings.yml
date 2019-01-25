@@ -1,0 +1,28 @@
+---
+# Create SA role bindings. These bindings are for cluster roles but bounded to ns
+
+- name: Create ro role-binding
+  k8s_v1_role_binding:
+    name: "{{ns_name}}-ro-binding"
+    namespace: "{{ns_name}}"
+    role_ref_kind: ClusterRole
+    role_ref_name: view
+    subjects:
+      - kind: ServiceAccount
+        name: "{{ns_name}}-ro"
+        namespace: "{{ns_name}}"
+    kubeconfig: "{{ '~' | expanduser }}/.kube/config"
+    state: "{{status}}"
+
+- name: Create admin role-binding
+  k8s_v1_role_binding:
+    name: "{{ns_name}}-admin-binding"
+    namespace: "{{ns_name}}"
+    role_ref_kind: ClusterRole
+    role_ref_name: admin
+    subjects:
+      - kind: ServiceAccount
+        name: "{{ns_name}}-admin"
+        namespace: "{{ns_name}}"
+    kubeconfig: "{{ '~' | expanduser }}/.kube/config"
+    state: "{{status}}"

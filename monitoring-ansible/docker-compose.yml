@@ -1,0 +1,144 @@
+version: '2'
+
+networks:
+  monitor-net:
+    driver: bridge
+volumes:
+    prometheus_data: {}
+    grafana_data: {}
+
+services:
+
+  prometheus:
+    build: ./service/Prometheus/src/Local/
+    image: monitoring-box/prometheus:v1.0
+    container_name: prometheus
+    volumes:
+      - ./services/Prometheus/src/Local/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: unless-stopped
+    expose:
+      - 9090
+    ports:
+      - 9090:9090
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  alertmanager:
+    build: ./service/Alertmanager/src/Local/
+    image: monitoring-box/alertmanager:v1.0
+    container_name: alertmanager
+    volumes:
+      - ./service/Alertmanager/src/Local:/etc/alertmanager/
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+    restart: unless-stopped
+    expose:
+      - 9093
+    ports:
+      - 9093:9093
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  nodeexporter:
+    image: prom/node-exporter
+    container_name: nodeexporter
+    restart: unless-stopped
+    expose:
+      - 9100
+    ports:
+      - 9100:9100
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+    networks:
+      - monitor-net
+
+    labels:
+      org.label-schema.group: "monitoring"
+
+  grafana:
+    image: monitoring-box/grafana:v1.0
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - user.config
+    restart: unless-stopped
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    networks:
+      - monitor-net
+
+    labels:
+      org.label-schema.group: "monitoring"
+  smtp:
+    image: namshi/smtp:latest
+    container_name: smtp
+    restart: unless-stopped
+    expose:
+      - 25
+
+    ports:
+      - 25:25
+
+    networks:
+      - monitor-net
+
+    labels:
+      org.label-schema.group: "monitoring"
+  jiraalert:
+    image: monitoring-box/jiraalert:v1.0
+    container_name: jiraalert
+    restart: unless-stopped
+    expose:
+      - 9097
+
+    ports:
+      - 9097:9097
+    environment:
+        - JIRA_PASS=${JIRA_PAAS}
+        - JIRA_USER=${JIRA_USER}
+        - DEBUG=1
+    networks:
+      - monitor-net
+
+    labels:
+      org.label-schema.group: "monitoring"
+  jira:
+    image: cptactionhank/atlassian-jira:latest
+    container_name: jira
+    restart: unless-stopped
+    expose:
+      - 8080
+
+    ports:
+      - 8081:8080
+    networks:
+      - monitor-net
+
+    labels:
+      org.label-schema.group: "monitoring"

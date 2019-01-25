@@ -1,0 +1,19 @@
+---
+
+- name: Deploy infra and services for Monitoring Box
+  hosts: localhost
+  gather_facts: False
+  #become: True
+  roles:
+    # common is where we create secrets & configmaps along with other things
+#    - role: fluentd-access
+#    - role: ansible-kubernetes-modules
+#      install_python_requirements: yes
+#    - role: common
+#    - role: infrastructure
+#    - role: smtp
+#    - role: mysql
+#    - role: grafana
+#    - role: prometheus
+    - role: monitoringbox
+#    - role: jiraalert

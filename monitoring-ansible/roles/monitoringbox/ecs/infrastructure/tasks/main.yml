@@ -1,0 +1,48 @@
+---
+
+# Setup Monitoring Box on ECS
+
+########################################### New VPC #########################################################
+- include: ../infrastructure/tasks/new-vpc-create-task.yml
+  when: env_ver == "new-vpc" and action_type == "create" and platform == "ecs" and ssl_enable == "false"
+
+- include: ../infrastructure/tasks/new-vpc-create-ssl-task.yml
+  when: env_ver == "new-vpc" and action_type == "create" and platform == "ecs" and ssl_enable == "true"
+
+  ####################################### New VPC Update #####################################################
+
+- include: ../infrastructure/tasks/new-vpc-create-task.yml
+  when: env_ver == "new-vpc" and action_type == "update" and platform == "ecs" and ssl_enable == "false"
+
+- include: ../infrastructure/tasks/new-vpc-ssl-create-task.yml
+  when: env_ver == "new-vpc" and action_type == "update" and platform == "ecs" and ssl_enable == "true"
+
+  ###################################### Existing VPC ########################################################
+
+- include: ../infrastructure/tasks/existing-vpc-create-ssl-task.yml
+  when: env_ver == "existing-vpc" and action_type == "create" and platform == "ecs" and ssl_enable == "true"
+
+- include: ../infrastructure/tasks/existing-vpc-create-task.yml
+  when: env_ver == "existing-vpc" and action_type == "create" and platform == "ecs" and ssl_enable == "false"
+
+####################################### Existing VPC Update ####################################################
+
+- include: ../infrastructure/tasks/existing-vpc-create-ssl-task.yml
+  when: env_ver == "existing-vpc" and action_type == "update" and platform == "ecs" and ssl_enable == "true"
+
+- include: ../infrastructure/tasks/existing-vpc-create-task.yml
+  when: env_ver == "existing-vpc" and action_type == "update" and platform == "ecs" and ssl_enable == "false"
+
+###################################### DELETE Infra ########################################################
+
+- include: ../infrastructure/tasks/new-vpc-delete-task.yml
+  when: env_ver == "new-vpc" and action_type == "delete" and platform == "ecs" and ssl_enable == "false"
+
+- include: ../infrastructure/tasks/new-vpc-delete-task.yml
+  when: env_ver == "new-vpc" and action_type == "delete" and platform == "ecs" and ssl_enable == "true"
+
+- include: ../infrastructure/tasks/existing-vpc-delete-task.yml
+  when: env_ver == "existing-vpc" and action_type == "delete" and platform == "ecs" and ssl_enable == "false"
+
+- include: ../infrastructure/tasks/existing-vpc-delete-task.yml
+  when: env_ver == "existing-vpc" and action_type == "delete" and platform == "ecs" and ssl_enable == "true"
