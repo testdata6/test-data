@@ -1,0 +1,21 @@
+{"name": "AUTOBAHN", "upstream_url": "http://autobahn.weave.local:9250/autobahn", "uris": "/autobahn"}
+{"name": "LMB", "upstream_url": "http://lmb.weave.local:9230/lmb", "uris": "/lmb"}
+{"name": "Aggregator", "upstream_url": "http://aggregator.weave.local:9300/aggregator", "uris": "/aggregator"}
+{"name": "Search-service", "upstream_url": "http://search.weave.local:9210/search-microservice/", "uris": "/search"}
+{"name": "DCMS", "upstream_url": "http://dcms.weave.local:9070/dcms", "uris": "/dcms"}
+{"name": "LM", "upstream_url": "http://lm.weave.local:9060/lm", "uris": "/lm"}
+{"name": "SPS", "upstream_url": "http://sps.weave.local:9350/sps", "uris": "/sps"}
+{"name": "IAM", "upstream_url": "http://iam.weave.local:9200/iam", "uris": "/iam"}
+{"name": "REGISTRAR", "upstream_url": "http://registrar.weave.local:9240/registrar", "uris": "/registrar"}
+{"name": "DOMAINGRAPH", "upstream_url": "http://domaingraph.weave.local:9260/dgs", "uris": "/dgs"}
+{"name": "NS", "upstream_url": "http://ns.weave.local:9010/ns", "uris": "/ns"}
+{"name": "LEAMOSE", "upstream_url": "http://leamose.weave.local:9220/leamose", "uris": "/leamose"}
+{"name": "AMS", "upstream_url": "http://ams.weave.local:9330/ams", "uris": "/ams"}
+{"name": "AKS", "upstream_url": "http://aks.weave.local:9220/aks", "uris": "/aks"}
+{"name": "LAP", "upstream_url": "http://lap.weave.local:9030/lap", "uris": "/lap"}
+{"name": "PLS", "upstream_url": "http://pls.weave.local:9340/pls", "uris": "/pls"}
+{"name": "CDS", "upstream_url": "http://cds.weave.local:9020/cds", "uris": "/cds"}
+{"name": "LPB", "upstream_url": "http://lpb.weave.local:9080/lpb", "uris": "/lpb"}
+{"name": "LEC", "upstream_url": "http://lec.weave.local:9050/lec", "uris": "/lec", "methods": "GET,PUT"}
+{"name": "LED", "upstream_url": "http://led.weave.local:9040/led", "uris": "/led", "methods": "GET,PUT"}
+{"name": "Swagger", "upstream_url": "http://swagger.weave.local:9032/swagger", "uris": "/swagger", "methods": "GET,PUT"}

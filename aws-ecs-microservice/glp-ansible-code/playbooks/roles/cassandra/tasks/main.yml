@@ -1,0 +1,22 @@
+---
+############Cassandra-deployments###############################################
+# Cassandra uses weave AMI to autodetect seed nodes based on DNS names
+# Master has to be deployed with a different name when compared to seeds
+# Eg: cassandra-master for master and cassandra-seed for seed containers
+# Data will be replicated between each of these nodes
+# Important: Following Keyspaces will need to replicated across the number of
+# nodes or at least two nodes
+# - system_auth keyspace
+# - kong
+# - Any other keyspace used by developers
+################################################################################
+
+# We need a solution to include without errors
+
+- include: cassandra-master.yml
+  when: cassandra_master
+  ignore_errors: True
+
+- include: cassandra-client.yml
+  when: cassandra_client
+  ignore_errors: True

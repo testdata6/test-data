@@ -1,0 +1,8 @@
+---
+
+- name: ID container stack setup
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - instructor-service

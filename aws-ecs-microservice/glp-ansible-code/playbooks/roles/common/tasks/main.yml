@@ -1,0 +1,4 @@
+# Call all dependent yml here
+---
+
+- include: cloudwatch-setup.yml

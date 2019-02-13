@@ -1,0 +1,8 @@
+---
+
+- name: SMTP container stack setup
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - smtp-service

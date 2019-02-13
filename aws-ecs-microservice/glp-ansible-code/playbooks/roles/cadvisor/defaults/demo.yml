@@ -1,0 +1,58 @@
+task_family: "CADVISOR"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: cadvisor
+c1_cpu: 200
+c1_memory: 512
+c1_soft_memory: 512
+c1_ports:
+  - c1hostPort: 8080
+    c1containerPort: 8080
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/cadvisor:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+
+c1_awslogs_group: Monitoring-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: cadvisor-service-logs
+c1_docker_labels: cadvisor-containers
+c1_docker_security_options: no-new-privileges
+
+
+# Volume attachment
+src_volume_name: "rootfsm"
+volume_src_path: "/"
+mount_container_path: "/rootfs"
+mount_readonly_bool: True
+
+src2_volume_name: "runfsm"
+volume2_src_path: "/var/run"
+mount2_container_path: "/var/run"
+mount2_readonly_bool: True
+
+src3_volume_name: "sysfs"
+volume3_src_path: "/sys"
+mount3_container_path: "/sys"
+mount3_readonly_bool: True
+
+src4_volume_name: "dockerfsm"
+volume4_src_path: "/var/lib/docker"
+mount4_container_path: "/var/lib/docker"
+mount4_readonly_bool: True
+
+src5_volume_name: "cgroupfsm"
+volume5_src_path: "/cgroup"
+mount5_container_path: "/cgroup"
+mount5_readonly_bool: True
+
+
+# Service Setup
+#cluster_name: "Application-Cluster-{{env}}"
+cluster_name: "Application-Cluster-{{env}}"
+service_name: "cadvisor"
+count: "3"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 100

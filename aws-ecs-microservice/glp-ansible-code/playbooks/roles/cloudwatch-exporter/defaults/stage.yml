@@ -1,0 +1,31 @@
+task_family: "CLOUDWATCH-EXPORTER"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: cloudwatch-exporter
+c1_cpu: 120
+c1_memory: 512
+c1_soft_memory: 512
+c1_ports:
+  - c1hostPort: 9106
+    c1containerPort: 9106
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/cloudwatch-exporter:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : REGION
+    c1value: us-east-1
+c1_awslogs_group: Monitoring-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: cloudwatch-exporter-service-logs
+c1_docker_labels: cloudwatch-exporter-container
+c1_docker_security_options: no-new-privileges
+
+# Service Setup
+cluster_name: "Monitoring-Cluster-{{env}}"
+service_name: "cloudwatch-exporter-service"
+count: "1"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 100

@@ -1,0 +1,49 @@
+---
+######couchbase############
+# Only master id deploying to EFS.
+# Workers can be on either EBS or non-persistent volumes as well.
+
+# NOTE: To be run in pull mode only
+###########################
+
+
+# Variables file will be selected based on extra-var argument env
+- include_vars: ../couchbase-master/defaults/{{env}}-master.yml
+
+- wait_for:
+    port: 8091
+    delay: 10
+
+# We want swapping to prevent oom only
+- name: Set swappiness to 0
+  # Set vm.swappiness to 0 in /etc/sysctl.conf
+  sysctl: name=vm.swappiness value=0 state=present
+  become: true
+
+# - name: Check if couchbase is running
+#   service: name=couchbase-server state=started --check
+
+- name: Configure main node's hostname
+  shell: /opt/couchbase/bin/couchbase-cli node-init -c 127.0.0.1:8091 --node-init-hostname={{hostvars['localhost']['ansible_default_ipv4']['address']}} --node-init-data-path='/couchbase-data' -u {{admin_user}} -p {{admin_password}}
+  ignore_errors: yes
+
+- name: Configure cluster using the main node
+  shell: /opt/couchbase/bin/couchbase-cli cluster-init -c 127.0.0.1:8091  --cluster-init-username={{admin_user}} --cluster-init-password={{admin_password}} --cluster-init-port=8091 --cluster-init-ramsize={{cluster_ram_quota}} --cluster-index-ramsize={{clutser_index_quota}} --services=data,index,query  -u {{admin_user}} -p {{admin_password}}
+  ignore_errors: yes
+  register: configure_main_node
+
+- debug: var=configure_main_node.stdout_lines
+
+
+# Update route53 entries in case the node boots. Ignore errors
+- name: Update Route53 entries for Couchbase
+  route53:
+     command: create
+     zone: "{{env}}-internal.com"
+     record: couchbase.{{env}}-internal.com
+     type: A
+     ttl: 30
+     value: "{% for host in groups['tag_Role_couchbase'] %}{{ hostvars[host]['ansible_ssh_host']}}{% if not loop.last %},{% endif %}{% endfor %}"
+     overwrite: true
+     private_zone: true
+  ignore_errors: yes

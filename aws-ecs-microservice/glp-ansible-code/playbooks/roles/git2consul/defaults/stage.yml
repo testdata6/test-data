@@ -1,0 +1,43 @@
+task_family: "GIT2CONSUL"
+task_role_arn: ''
+network_mode: 'host'
+
+# First container
+c1_appname: git2consul
+c1_cpu: 100
+c1_memory: 512
+c1_soft_memory: 256
+c1_ports:
+  - c1hostPort: 7010
+    c1containerPort: 7010
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/git2consul:{{ build_no | default ('latest')}}
+c1_essential: "True"
+c1_privileged: False
+c1_environment_variables:
+  - c1name : BRANCH
+    c1value: git2consul
+  - c1name: CONSUL_ENDPOINT
+    c1value: "consul.{{env}}-internal.com"
+  - c1name: CONSUL_PORT
+    c1value: >
+      "8500"
+  - c1name: TOKEN
+    c1value: A6C1B4C3-13A6-48DC-B0DA-7E5F0C97AE87
+
+c1_awslogs_group: "/aws/ecs/{{env}}"
+# Our logs go to us-east-2
+c1_log_region: "us-east-2"
+c1_awslogs_stream_prefix: git2consul/
+c1_docker_labels: git2consul
+c1_docker_security_options: no-new-privileges
+
+
+# Service Setup
+cluster_name: "Consul-Master-Cluster-{{env}}"
+service_name: "git2consul"
+count: "1"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 50

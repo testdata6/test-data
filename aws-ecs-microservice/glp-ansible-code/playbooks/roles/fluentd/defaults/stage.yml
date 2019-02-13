@@ -1,0 +1,39 @@
+task_family: "FLUENTD"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: fluentd
+c1_cpu: 200
+c1_memory: 2048
+c1_soft_memory: 2048
+c1_ports:
+  - c1hostPort: 24224
+    c1containerPort: 24224
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/fluentd:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : ELASTICSEARCH_HOST
+    c1value: search-application-logs-stage-bsvnseyv6ucn7j7p5lv7m3cxby.us-east-1.es.amazonaws.com
+  - c1name : REGION
+    c1value: us-east-1
+  - c1name : INDEX_NAME
+    c1value: fluentd-{{env}}
+  - c1name : AWS_ACCESS_KEY_ID
+    c1value: xyz
+  - c1name : AWS_SECRET_KEY_ID
+    c1value: xyz
+
+c1_fluentd_address: fluentd.weave.local
+c1_tag_name: learnerui-service-{{env}}
+c1_docker_labels: monitoring-container
+c1_docker_security_options: no-new-privileges
+
+# Service Setup
+cluster_name: "Application-Cluster-{{env}}"
+service_name: "fluentd-service-update"
+count: "3"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 100

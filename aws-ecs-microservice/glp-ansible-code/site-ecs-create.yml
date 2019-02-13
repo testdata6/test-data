@@ -1,0 +1,273 @@
+---
+
+#####################################################################################
+# NOTE:
+#   Domain names
+#     - Applications ( UI and Backend ) register CNAMES with route53 when deployed
+#       and destroyed
+#     - The domain name is passed via terraform
+#     - Domain name is not needed for update operations and hence can be integrated
+#       with CI without that value
+#     - A default value for domain is also set in group_vars/all in case services
+#       are deployed/erased manually
+#####################################################################################
+
+- include: playbooks/consul-master.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+- include: playbooks/cassandra.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    cassandra_client: true
+
+- include: playbooks/cassandra.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    cassandra_master: true
+
+# - include: playbooks/consul-template.yml
+#   vars:
+#     ecs_action: create
+#     env: "{{env}}"
+#     region: "{{region}}"
+#     consul_template_cluster_name: "{{consul_template_cluster_name}}"
+
+- include: playbooks/git2consul.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    consul_cluster_name: "{{consul_cluster_name}}"
+
+- include: playbooks/zookeeper.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    kafka_zk_cluster_name: "{{kafka_zk_cluster_name}}"
+
+- include: playbooks/kafka.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    kafka_zk_cluster_name: "{{kafka_zk_cluster_name}}"
+
+##########Application code ##################
+# For application, we pass domain names. These will be used during
+# create/destroy only
+- include: playbooks/cds.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/lap.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+- include: playbooks/sps.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+- include: playbooks/pls.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+- include: playbooks/leamose.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+- include: playbooks/ams.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/dcms.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/registrar.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/lec.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/led.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/lm.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/search.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/aks.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/aggregator.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/autobahn.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+
+- include: playbooks/lmb.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/lpb.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/iam.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/ns.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+    domain: "{{route53_domain}}"
+
+
+- include: playbooks/fluentd.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+############UI Components#################
+
+- include: playbooks/learnerui.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+- include: playbooks/instructorui.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+- include: playbooks/loginui.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+###########Monitoring-Cluster########
+- include: playbooks/prometheus.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+- include: playbooks/cadvisor.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+- include: playbooks/nodeexporter.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+#############################
+# Keep kong in last as it has
+# dependency on ELB
+#############################
+- include: playbooks/kong-master.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"
+
+- include: playbooks/kong-client.yml
+  vars:
+    ecs_action: create
+    env: "{{env}}"
+    region: "{{region}}"

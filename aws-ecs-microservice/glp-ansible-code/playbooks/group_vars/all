@@ -1,0 +1,6 @@
+# Variable/values for all nodes
+cloudformation_owner: ec2-user
+
+# Route53
+# We use gl-poc.com as default if not defined
+domain: "gl-poc.com"

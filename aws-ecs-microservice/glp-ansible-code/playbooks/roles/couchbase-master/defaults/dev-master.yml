@@ -1,0 +1,4 @@
+admin_user: "Administrator"
+admin_details: "Globall@gic123" #pwd is replaced with details
+cluster_ram_quota: 5120
+clutser_index_quota: 1024

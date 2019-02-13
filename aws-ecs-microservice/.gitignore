@@ -1,0 +1,11 @@
+glp-terraform-code/stack-deployment/terraform.tfstate
+glp-terraform-code/stack-deployment/terraform.tfstate.backup
+glp-terraform-code/modules/.terraform/
+glp-terraform-code/modules/bastion/.terraform/
+glp-terraform-code/modules/bastion/secrets.tfvars
+glp-terraform-code/stack-deployment/.terraform/
+**/terraform.tfstate.backup
+**/.terraform/
+**/.terraform/*
+**/.DS_Store
+**/*.retry

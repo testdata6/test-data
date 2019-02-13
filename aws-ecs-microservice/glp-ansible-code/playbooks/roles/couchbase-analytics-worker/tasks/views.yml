@@ -1,0 +1,34 @@
+---
+
+- name: Create directory for views downloads
+  file:
+    path: /tmp/views_data/
+    state: directory
+    mode: 0755
+  ignore_errors: yes
+
+
+- name: Get view-buckets from S3
+  s3:
+    bucket: plp-cb-data
+    object: "ViewData_ddocFiles/{{item}}"
+    dest: "/tmp/views_data/{{item}}"
+    mode: get
+    region: us-east-1
+  with_items:
+   - dcms.ddoc
+   - lap.ddoc
+   - lec.ddoc
+   - led.ddoc
+   - lpb.ddoc
+  ignore_errors: yes
+
+- name: Create views
+  shell: "curl -X PUT -H 'Content-Type: application/json' http://Administrator:Globall0g1c@localhost:8092/{{item}}/_design/{{item}}docType -d @/tmp/views_data/{{item}}.ddoc"
+  with_items:
+    - lap
+    - lec
+    - led
+    - lpb
+    - dcms
+  ignore_errors: yes

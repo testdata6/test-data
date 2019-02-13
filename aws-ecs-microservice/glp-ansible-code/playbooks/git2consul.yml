@@ -1,0 +1,8 @@
+---
+
+- name: Git2consul Setup
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - git2consul

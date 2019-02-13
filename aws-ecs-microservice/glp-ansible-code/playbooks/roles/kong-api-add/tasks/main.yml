@@ -1,0 +1,11 @@
+---
+#This role will add all API (in api-list.txt) to kong
+#
+        - name: uploading API on kong
+          uri:
+            url: http://localhost:8001/apis/
+            method: PUT
+            body: "{{ item }}"
+            status_code: 201
+            body_format: json
+          with_lines: cat roles/kong-api-add/defaults/api-list.txt

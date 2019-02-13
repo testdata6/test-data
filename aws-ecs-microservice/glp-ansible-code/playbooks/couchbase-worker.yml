@@ -1,0 +1,10 @@
+---
+# NOTE: To be run in pull mode only
+
+- name: Couchbase master VM setup
+  hosts: localhost
+  gather_facts: True
+  become: False
+  roles:
+    - couchbase-worker
+    - common

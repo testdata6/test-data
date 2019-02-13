@@ -1,0 +1,58 @@
+task_family: "LEARNING-EXPERIENCE-COMPOSER"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: lec
+c1_cpu: 2048
+c1_memory: 6144
+c1_soft_memory: 4096
+c1_ports:
+  - c1hostPort: 9050
+    c1containerPort: 9050
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/{{ ecr_prefix }}-lec:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : APP_ENV
+    c1value: env_properties
+  - c1name : CONF_HOME
+    c1value: /opt/apps-java/config
+  # Using master token for now. Once we have valut, we can change this
+  - c1name : CONSUL_TOKEN
+    c1value: 25e38b41-9826-420a-8c75-1ec7057e56ca
+  - c1name : CONSUL_URL
+    c1value: "https://consul-internal-integration.gl-poc.com"
+  - c1name : PREFIX_MAIN
+    c1value: "application-config/git2consul/plp-int/lec-service/"
+  - c1name : PREFIX_DB
+    c1value: "application-config/git2consul/plp-int/global/cb5-kernel/"
+  - c1name : dataCenter
+    c1value: "consul-{{env}}"
+  - c1name : CONSUL_PORT
+    c1value: >
+       "443"
+  - c1name : container_name
+    c1value: "lec-containers"
+  - c1name : namespace
+    c1value: "plp-{{env}}"
+  - c1name : service_name
+    c1value: "lec-{{env}}-service"
+  - c1name : container_id
+    c1value: "lec-container-{{env}}"
+  - c1name : host
+    c1value: "lec.weave.local"
+c1_awslogs_group: Application-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: lec-service-logs
+c1_docker_labels: lec-containers
+c1_docker_security_options: no-new-privileges
+
+
+# Service Setup
+cluster_name: "Application-Cluster-{{env}}"
+service_name: "lec-services"
+count: "2"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 50

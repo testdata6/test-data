@@ -1,0 +1,69 @@
+---
+
+- hosts: localhost
+  gather_facts: False
+  become: False
+  tasks:
+  - name: Get route53 hosted zone entries to be deleted -kafka
+    route53:
+      command: get
+      zone: "{{env}}-internal.com"
+      record: kafka.{{env}}-internal.com
+      type: A
+      private_zone: true
+    register: rec
+
+  - debug: var=rec.set.record
+
+  - name: Delete route53 private_zone entries
+    route53:
+      command: delete
+      zone: "{{env}}-internal.com"
+      record: "{{ rec.set.record }}"
+      ttl: "{{ rec.set.ttl }}"
+      type: "{{ rec.set.type }}"
+      value: "{{ rec.set.value }}"
+      private_zone: true
+
+  - name: Get route53 hosted zone entries to be deleted -zk
+    route53:
+      command: get
+      zone: "{{env}}-internal.com"
+      record: zookeeper.{{env}}-internal.com
+      type: A
+      private_zone: true
+    register: rec
+
+  - debug: var=rec.set.record
+
+  - name: Delete route53 private_zone entries
+    route53:
+      command: delete
+      zone: "{{env}}-internal.com"
+      record: "{{ rec.set.record }}"
+      ttl: "{{ rec.set.ttl }}"
+      type: "{{ rec.set.type }}"
+      value: "{{ rec.set.value }}"
+      private_zone: true
+
+
+  - name: Get route53 hosted zone entries to be deleted -couchbase
+    route53:
+      command: get
+      zone: "{{env}}-internal.com"
+      record: couchbase.{{env}}-internal.com
+      type: A
+      private_zone: true
+    register: rec
+
+  - debug: var=rec.set.record
+
+  - name: Delete route53 private_zone entries
+    route53:
+      command: delete
+      zone: "{{env}}-internal.com"
+      record: "{{ rec.set.record }}"
+      ttl: "{{ rec.set.ttl }}"
+      type: "{{ rec.set.type }}"
+      value: "{{ rec.set.value }}"
+      private_zone: true

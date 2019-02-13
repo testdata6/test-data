@@ -1,0 +1,63 @@
+task_family: "INSTRUCTORUI"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: instructorui
+c1_cpu: 1024
+c1_memory: 4096
+c1_soft_memory: 2048
+c1_ports:
+  - c1hostPort: 0
+    c1containerPort: 80
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/{{ ecr_prefix }}-instructorui:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : CONSUL_TOKEN
+    c1value: A6C1B4C3-13A6-48DC-B0DA-7E5F0C97AE87
+  - c1name : CONSUL_URL
+    c1value: "consul.{{env}}-internal.com"
+  - c1name : PREFIX_MAIN
+    c1value: "application-config/git2consul/plp-stg/instructor-ui/"
+  - c1name : LEC_URL
+    c1value: kong.stage-internal.com
+  - c1name : AGGREGATOR_URL
+    c1value: kong.stage-internal.com
+  - c1name : DCMS_URL
+    c1value: kong.stage-internal.com
+  - c1name : CDS_URL
+    c1value: kong.stage-internal.com
+  - c1name : LED_URL
+    c1value: kong.stage-internal.com
+  - c1name : LAP_URL
+    c1value: kong.stage-internal.com
+  - c1name : LM_URL
+    c1value: kong.stage-internal.com
+  - c1name : NS_URL
+    c1value: kong.stage-internal.com
+  - c1name : IAM_URL
+    c1value: kong.stage-internal.com
+  - c1name : REGISTRAR_URL
+    c1value: kong.stage-internal.com
+  - c1name : GB_URL
+    c1value: kong.stage-internal.com
+  - c1name : LCD_URL
+    c1value: kong.stage-internal.com
+  - c1name : LAD_URL
+    c1value: kong.stage-internal.com
+  - c1name : IMS_URL
+    c1value: kong.stage-internal.com
+c1_awslogs_group: Application-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: instructorui-service-logs
+c1_docker_labels: instructorui-containers
+c1_docker_security_options: no-new-privileges
+
+# Service Setup
+cluster_name: "Application-Cluster-{{env}}"
+service_name: "instructorui-service"
+count: "3"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 100

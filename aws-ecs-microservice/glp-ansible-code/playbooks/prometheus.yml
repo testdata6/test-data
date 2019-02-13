@@ -1,0 +1,8 @@
+---
+
+- name: PROMETHEUS container stack setup
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - prometheus

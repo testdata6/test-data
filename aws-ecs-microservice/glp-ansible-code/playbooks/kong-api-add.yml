@@ -1,0 +1,8 @@
+---
+
+- name: Adding API key on Kong
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - kong-api-add

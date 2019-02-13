@@ -1,0 +1,131 @@
+---
+######couchbase-worker############
+###########################
+
+
+# Variables file will be selected based on extra-var argument env
+- include_vars: ../couchbase-worker/defaults/{{env}}-worker.yml
+
+- wait_for:
+    port: 8091
+    delay: 10
+
+# We want swapping to prevent oom only
+- name: Set swappiness to 0
+  # Set vm.swappiness to 0 in /etc/sysctl.conf
+  sysctl: name=vm.swappiness value=0 state=present
+  become: true
+
+# Thanks @Amit.ganvir
+- name: Configure cluster using the main node
+  shell: /opt/couchbase/bin/couchbase-cli server-add --cluster={{item}}:8091  --user {{admin_user}} --password {{admin_password}} --server-add={{hostvars['localhost']['ansible_default_ipv4']['address']}}:8091 --server-add-username={{admin_user}} --server-add-password={{admin_password}} --services=data
+  with_items:
+        - "{{hostvars[inventory_hostname].groups.tag_Purpose_master}}"
+  ignore_errors: yes
+  register: configure_main_node
+
+- debug: var=configure_main_node.stdout_lines
+
+- name: Rebalance the cluster
+  shell: /opt/couchbase/bin/couchbase-cli rebalance -c 127.0.0.1:8091 -u {{admin_user}} -p {{admin_password}}
+  ignore_errors: yes
+
+# All provisioning is from worker because total ram cannot be calculated unless all nodes join
+# If data provisioning fails, we can still continue as services need buckets to start.
+
+- name: Create buckets
+  shell: /opt/couchbase/bin/couchbase-cli bucket-create -c 127.0.0.1:8091 --bucket="{{item}}" --bucket-type=couchbase --bucket-ramsize={{bucket_ram_size}} --bucket-replica=1 --wait -u {{admin_user}} -p {{admin_password}}
+  with_items:
+     - common
+     - lap
+     - lec
+     - led
+     - lpb
+     - ns
+     - dcms
+     - iam
+  ignore_errors: yes
+
+- name: Create primary index on each bucket
+  shell: /opt/couchbase/bin/cbq --script="CREATE PRIMARY INDEX \`{{item}}\` ON \`{{item}}\`"
+  with_items:
+     - common
+     - lap
+     - lec
+     - led
+     - lpb
+     - ns
+     - dcms
+     - iam
+  ignore_errors: yes
+
+- name: Create directory for zip downloads
+  file:
+    path: /tmp/db_data/
+    state: directory
+    mode: 0755
+  ignore_errors: yes
+
+
+- name: Get buckets from S3
+  s3:
+    bucket: plp-cb-data
+    object: "cb-latest-data/{{item}}"
+    dest: "/tmp/db_data/{{item}}"
+    mode: get
+    region: us-east-1
+  with_items:
+   - common.zip
+   - dcms.zip
+   - iam.zip
+   - lap.zip
+   - lec.zip
+   - led.zip
+   - lpb.zip
+   - ns.zip
+  ignore_errors: yes
+
+- name: Unzip all files
+  unarchive:
+    src: "/tmp/db_data/{{item}}.zip"
+    dest: "/tmp/db_data/"
+  with_items:
+    - common
+    - lap
+    - lec
+    - led
+    - lpb
+    - ns
+    - dcms
+    - iam
+  ignore_errors: yes
+
+- name: Upload data to buckets
+  shell: "/opt/couchbase/bin/cbrestore /tmp/db_data/{{item}} http://localhost:8091 -b {{item}} -u {{admin_user}} -p {{admin_password}}"
+  with_items:
+    - lap
+    - lec
+    - led
+    - lpb
+    - ns
+    - dcms
+    - iam
+    - common
+  ignore_errors: yes
+
+
+# Create views
+- include: views.yml
+
+# Update route53 entries in case the node boots. Ignore errors
+- name: Update Route53 entries for Couchbase
+  route53:
+       command: create
+       zone: "{{env}}-internal.com"
+       record: couchbase.{{env}}-internal.com
+       type: A
+       ttl: 30
+       value: "{% for host in groups['tag_Role_couchbase'] %}{{ hostvars[host]['ansible_ssh_host']}}{% if not loop.last %},{% endif %}{% endfor %}"
+       overwrite: true
+       private_zone: true
+  ignore_errors: yes

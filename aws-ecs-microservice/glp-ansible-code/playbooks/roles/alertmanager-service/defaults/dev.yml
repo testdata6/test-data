@@ -1,0 +1,33 @@
+task_family: "ALERTMANAGER"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: alertmanager
+c1_cpu: 120
+c1_memory: 512
+c1_soft_memory: 512
+c1_ports:
+  - c1hostPort: 9093
+    c1containerPort: 9093
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/alertmanager-service:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : ALERT_FROM
+    c1value: "Alertmanager@alerts.gl-poc.com"
+  - c1name : SMTP_ADDRESS
+    c1value: "smtp.weave.local"
+c1_awslogs_group: Monitoring-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: alertmanager-service-logs
+c1_docker_labels: alertmanager-container
+c1_docker_security_options: no-new-privileges
+
+# Service Setup
+cluster_name: "Monitoring-Cluster-{{env}}"
+service_name: "alertmanager-service"
+count: "1"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 100

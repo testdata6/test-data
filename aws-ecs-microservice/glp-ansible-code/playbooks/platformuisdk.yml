@@ -1,0 +1,12 @@
+---
+# Couchbase master uses EFS
+# Only master uses EFS
+# We may switch both master and workers to EBS
+# In which case, we will use same role as Cassandra
+
+- name: PLatformuiSDK container stack setup
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - platformuisdk

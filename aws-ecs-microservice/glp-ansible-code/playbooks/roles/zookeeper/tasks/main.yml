@@ -1,0 +1,15 @@
+---
+
+# Deploy zookeeper clusters only in Stage
+
+- include: zoo1.yml
+
+# - include: zoo2.yml
+#   when: env == "stage"
+#   ignore_errors: true
+#
+# - include: zoo3.yml
+#   when: env == "stage"
+#   ignore_errors: true
+
+- include: zoo-route53.yml

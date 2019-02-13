@@ -1,0 +1,41 @@
+task_family: "COUCHBASE-EXPORTER"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: couchbase-exporter
+c1_cpu: 120
+c1_memory: 512
+c1_soft_memory: 512
+c1_ports:
+  - c1hostPort: 9119
+    c1containerPort: 9119
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/couchbase-exporter:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : COUCHBASE_HOST
+    c1value: couchbase.dev-internal.com
+  - c1name : COUCHBASE_PORT
+    c1value: >
+       "8091"
+  - c1name : COUCHBASE_USERNAME
+    c1value: Administrator
+  - c1name : COUCHBASE_PASSWORD
+    c1value: XXXXXXXXXX
+  - c1name : PROMETHEUS_PORT
+    c1value: >
+       "9119"
+c1_awslogs_group: Monitoring-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: cocuhbase-exporter-service-logs
+c1_docker_labels: couchbase-exporter-container
+c1_docker_security_options: no-new-privileges
+
+# Service Setup
+cluster_name: "Monitoring-Cluster-{{env}}"
+service_name: "couchbase-exporter-service-update"
+count: "1"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 100

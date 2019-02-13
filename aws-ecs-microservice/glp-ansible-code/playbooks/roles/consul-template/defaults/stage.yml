@@ -1,0 +1,50 @@
+task_family: "CONSUL-TEMPLATE"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: consul-template
+c1_cpu: 256
+c1_memory: 512
+c1_soft_memory: 256
+c1_ports:
+  - c1hostPort: 80
+    c1containerPort: 80
+    c1protocol: tcp
+  - c1hostPort: 443
+    c1containerPort: 443
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/stage-consul-template
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : CONSUL_TOKEN
+    c1value: A6C1B4C3-13A6-48DC-B0DA-7E5F0C97AE87
+c1_awslogs_group: /aws/ecs/Stage
+c1_log_region: us-east-2
+c1_awslogs_stream_prefix: consul-template
+c1_docker_labels: consul-template
+c1_docker_security_options: no-new-privileges
+c1_data_container: consul-data
+c1_data_container_ro: False
+
+# Data volume container for consul template
+c2_appname: consul-data
+c2_cpu: 20
+c2_memory: 256
+c2_soft_memory: 256
+c2_environment_variables:
+  - c2name : CONSUL_TOKEN
+    c2value: A6C1B4C3-13A6-48DC-B0DA-7E5F0C97AE87
+c2_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/stage-consul-template-data
+c2_essential: True
+c2_privileged: False
+c2_docker_labels: consul-template
+
+
+# Service Setup
+cluster_name: "Ingress-Cluster-{{env}}"
+service_name: "consul-template-service"
+count: "3"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 50

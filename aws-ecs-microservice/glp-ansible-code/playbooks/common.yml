@@ -1,0 +1,14 @@
+---
+
+# NOTE: To be run in pull mode only
+
+- name: Common configuration for all nodes
+  # Tagged all PLP instances with PLP but they are in ASG
+  # After relauch, we can use PLP tag instead of ec2
+  hosts: localhost
+  gather_facts: True
+  become: True
+  vars:
+    cloudformation_owner: ec2-user
+  roles:
+    - common

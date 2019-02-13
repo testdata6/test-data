@@ -1,0 +1,71 @@
+task_family: "CONSUL-MASTER"
+task_role_arn: ''
+network_mode: 'host'
+
+# First container
+c1_appname: consul-master
+c1_cpu: 100
+c1_memory: 512
+c1_soft_memory: 256
+c1_ports:
+  - c1hostPort: 8300
+    c1containerPort: 8300
+    c1protocol: tcp
+  - c1hostPort: 8301
+    c1containerPort: 8301
+    c1protocol: tcp
+  - c1hostPort: 8301
+    c1containerPort: 8301
+    c1protocol: udp
+  - c1hostPort: 8302
+    c1containerPort: 8302
+    c1protocol: tcp
+  - c1hostPort: 8400
+    c1containerPort: 8400
+    c1protocol: tcp
+  - c1hostPort: 8500
+    c1containerPort: 8500
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/consul-master
+c1_essential: "True"
+c1_privileged: False
+c1_environment_variables:
+  - c1name : SERVER_COUNT
+    c1value: >
+       "3"
+  - c1name: TAG_KEY
+    c1value: cluster
+  - c1name: TAG_VALUE
+    c1value: consul
+  - c1name: REGION
+    c1value: "{{region}}"
+  - c1name: CONSUL_LOCAL_CONFIG
+    c1value: >
+        '{ "skip_leave_on_interrupt": true,
+           "datacenter" : "Dev",
+           "acl_datacenter": "Dev",
+           "acl_default_policy": "deny",
+           "acl_down_policy": "allow",
+           "acl_master_token": "25e38b41-9826-420a-8c75-1ec7057e56ca",
+           "encrypt": "4JyU3JaAq5aeK0ifkyeZNQ=="
+         }'
+c1_awslogs_group: "/aws/ecs/{{env}}"
+# Our logs go to us-east-2
+c1_log_region: "us-east-2"
+c1_awslogs_stream_prefix: consul-master/
+c1_docker_labels: consul-master
+c1_docker_security_options: no-new-privileges
+
+# Volume attachment
+
+# src_volume_name: "consul-data-ebs"
+# volume_src_path: "/consul-data"
+# mount_container_path: "/consul/data"
+# mount_readonly_bool: False
+
+# Service Setup
+cluster_name: "Consul-Master-Cluster-{{env}}"
+service_name: "consul-master"
+count: "3"
+maximumPercent: 200
+minimumHealthyPercent: 50

@@ -1,0 +1,8 @@
+---
+
+- name: kong-performance-test
+  hosts: localhost
+  gather_facts: False
+  become: False
+  roles:
+    - kong-performance-test

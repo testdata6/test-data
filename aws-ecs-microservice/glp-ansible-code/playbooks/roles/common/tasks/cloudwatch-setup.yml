@@ -1,0 +1,18 @@
+# This role will install and configure cloudwatch monitoring scripts on all instances
+- name: Download CloudWatchMonitoringScripts-1
+  unarchive: >
+    src=http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip
+    dest=/opt/aws/bin/
+    creates=/opt/aws/bin/aws-scripts-mon
+    owner="{{cloudformation_owner}}"
+    group="{{cloudformation_owner}}"
+    remote_src=true
+
+
+# It's probably better to use /etc/cron.d
+# @TODO
+- name: Setup a cron for cloudwatch metrics
+  cron: >
+    minute="*/5"
+    user="{{cloudformation_owner}}"
+    job="/opt/aws/bin/aws-scripts-mon/mon-put-instance-data.pl --auto-scaling --mem-util --mem-avail --disk-space-util --disk-path=/ --disk-path=/var/lib/docker --from-cron > /dev/null "

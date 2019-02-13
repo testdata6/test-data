@@ -1,0 +1,58 @@
+task_family: "IAM-SERVICES"
+task_role_arn: ''
+network_mode: "bridge"
+c1_appname: iam
+c1_cpu: 1024
+c1_memory: 4096
+c1_soft_memory: 2048
+c1_ports:
+  - c1hostPort: 0
+    c1containerPort: 9200
+    c1protocol: tcp
+  - c1hostPort: 9202
+    c1containerPort: 9202
+    c1protocol: tcp
+c1_image: 939393939339.dkr.ecr.us-east-1.amazonaws.com/{{ ecr_prefix }}-iam:{{ build_no | default ('latest')}}
+c1_essential: True
+c1_privileged: False
+c1_environment_variables:
+  - c1name : APP_ENV
+    c1value: env_properties
+  - c1name : CONF_HOME
+    c1value: /opt/apps-java/config
+  # Using master token for now. Once we have valut, we can change this
+  - c1name : CONSUL_TOKEN
+    c1value: A6C1B4C3-13A6-48DC-B0DA-7E5F0C97AE87
+  - c1name : CONSUL_URL
+    c1value: "consul.{{env}}-internal.com"
+  - c1name : PREFIX_MAIN
+    c1value: "application-config/git2consul/plp-stg/iam-service/"
+  - c1name : PREFIX_DB
+    c1value: "application-config/git2consul/plp-stg/global/"
+  - c1name : dataCenter
+    c1value: "consul-{{env}}"
+  - c1name : MY_POD_NAME
+    c1value: "iam-containers"
+  - c1name : namespace_name
+    c1value: "plp-{{env}}"
+  - c1name : name
+    c1value: "iam-{{env}}-service"
+  - c1name : pod_name
+    c1value: "iam-container-{{env}}"
+  - c1name : host
+    c1value: "iam.weave.local"
+c1_awslogs_group: Application-logs-{{env}}
+c1_log_region: ap-southeast-2
+c1_awslogs_stream_prefix: iam-service-logs
+c1_docker_labels: iam-containers
+c1_docker_security_options: no-new-privileges
+
+
+# Service Setup
+cluster_name: "Application-Cluster-{{env}}"
+service_name: "iam-services"
+count: "3"
+
+# Stage to Prod it has to be rolling update
+maximumPercent: 200
+minimumHealthyPercent: 50
