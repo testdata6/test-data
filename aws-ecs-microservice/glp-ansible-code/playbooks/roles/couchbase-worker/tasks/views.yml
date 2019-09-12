@@ -24,7 +24,7 @@
   ignore_errors: yes
 
 - name: Create views
-  shell: "curl -X PUT -H 'Content-Type: application/json' http://Administrator:Globall0g1c@localhost:8092/{{item}}/_design/{{item}}docType -d @/tmp/views_data/{{item}}.ddoc"
+  shell: "curl -X PUT -H 'Content-Type: application/json' http://Administrator:Password@localhost:8092/{{item}}/_design/{{item}}docType -d @/tmp/views_data/{{item}}.ddoc"
   with_items:
     - lap
     - lec
