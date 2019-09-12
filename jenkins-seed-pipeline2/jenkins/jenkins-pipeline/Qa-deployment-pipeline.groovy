@@ -3,7 +3,7 @@ node (){
      stage ('Getting previous Version')
         {
      currentBuild.displayName = "${BUILD_NUMBER}-${serviceName}-${buildVersion}"
-     sh 'curl -X GET -v -u plp-jenkins:password http://172.168.0.227:8080/job/QA-Kube-deployer-${serviceName}/lastSuccessfulBuild/api/json 2> /dev/null | jq .displayName > previousVersion.txt'
+     sh 'curl -X GET -v -u plp-jenkins:password http://10.168.0.227:8080/job/QA-Kube-deployer-${serviceName}/lastSuccessfulBuild/api/json 2> /dev/null | jq .displayName > previousVersion.txt'
      previousVersion=readFile('previousVersion.txt')
      deploymentInfo="${BUILD_NUMBER}-${serviceName}-${buildVersion}-QA"
      print deploymentInfo
